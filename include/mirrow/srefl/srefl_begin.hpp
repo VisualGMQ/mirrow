@@ -7,11 +7,11 @@
 #pragma once
 #include "mirrow/srefl/srefl.hpp"
 
-#define srefl_class(type) template<> struct type_info<type>: base_type_info<type>
+#define srefl_class(type, ...) template<> struct type_info<type, attr_list<##__VA_ARGS__>>: base_type_info<type>
 
-#define fields using fields = util::type_list
+#define fields(...) inline static constexpr auto fields = std::make_tuple(__VA_ARGS__);
 
-#define field field_traits
+#define field(pointer, ...) field_traits{pointer, #pointer, ##__VA_ARGS__}
 
 #define bases using bases = util::type_list
 
