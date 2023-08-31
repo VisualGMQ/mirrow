@@ -1,5 +1,9 @@
 #pragma once
 
+#undef MIRROW_SREFL_BEGIN
+
+}
+
 #undef srefl_class
 #undef fields
 #undef field

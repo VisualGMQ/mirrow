@@ -7,14 +7,19 @@
 #pragma once
 #include "mirrow/srefl/srefl.hpp"
 
-#define srefl_class(type) template<> struct ::mirrow::srefl::type_info<type>: ::mirrow::srefl::base_type_info<type>
+#define srefl_class(type) template<> struct type_info<type>: base_type_info<type>
 
-#define fields using fields = ::mirrow::util::type_list
+#define fields using fields = util::type_list
 
-#define field ::mirrow::srefl::field_traits
+#define field field_traits
 
-#define bases using bases = typename ::mirrow::util::type_list
+#define bases using bases = util::type_list
 
-#define ctors using ctors = ::mirrow::util::type_list
+#define ctors using ctors = util::type_list
 
-#define ctor ::mirrow::srefl::ctor
+#ifdef MIRROW_SREFL_BEGIN
+#error "do you forget include mirrow/srefl/srefl_end.hpp after include mirrow/srefl/srefl_begin.hpp?"
+#define MIRROW_SREFL_BEGIN
+#endif
+
+namespace mirrow::srefl {
