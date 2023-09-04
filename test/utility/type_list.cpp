@@ -41,6 +41,11 @@ struct IsInt<int> {
     static constexpr bool value = true;
 };
 
+template <typename T>
+void FilterEven(T value) {
+    return value % 2 == 0;
+}
+
 TEST_CASE("utility functions") {
     static_assert(disjunction_v<list, IsInt>);
     static_assert(!conjunction_v<list, IsInt>);

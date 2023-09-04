@@ -91,7 +91,7 @@ constexpr size_t list_size_v = detail::list_size<List>::value;
  * @tparam List
  */
 template <typename List>
-constexpr bool is_list_empty = list_size_v<List> == 0;
+constexpr bool is_list_empty_v = list_size_v<List> == 0;
 
 /**
  * @brief get first element from type list

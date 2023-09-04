@@ -1,1 +1,2 @@
 AddTest(srefl)
+AddTest(reflect)
