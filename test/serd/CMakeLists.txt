@@ -1,1 +1,1 @@
-AddTest(srefl_serd)
+AddTest(srefl_serd tomlplusplus::tomlplusplus)

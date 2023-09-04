@@ -19,7 +19,8 @@ struct has_bases final : std::false_type {};
 
 template <typename TypeInfo>
 struct has_bases<TypeInfo, std::void_t<typename TypeInfo::bases>> {
-    static constexpr bool value = !util::is_list_empty_v<TypeInfo::bases>;
+    static constexpr bool value =
+        !util::is_list_empty_v<typename TypeInfo::bases>;
 };
 
 template <typename TypeInfo, typename = std::void_t<>>
@@ -132,8 +133,11 @@ public:
     template <typename Function>
     void visit_fields(Function&& func) {
         if constexpr (has_fields_v<type>) {
-            std::apply([&func](const Args&... args) { (func(args), ...); },
-                       typename type::fields);
+            std::apply(
+                [&func](auto&&... args) {
+                    (func(std::forward<decltype(args)>(args)), ...);
+                },
+                type::fields);
         }
     }
 
@@ -160,10 +164,10 @@ public:
 private:
     template <size_t Idx, typename Function>
     void do_visit_member_variables(Function&& func) {
-        constexpr auto fields = type::fields;
+        auto fields = type::fields;
         if constexpr (Idx < util::list_size_v<std::remove_cv_t<
                                 std::remove_reference_t<decltype(fields)>>>) {
-            constexpr auto field = std::get<Idx>(fields);
+            auto field = std::get<Idx>(fields);
             if constexpr (field.is_variable() && field.is_member()) {
                 func(std::get<Idx>(fields));
             }
@@ -189,8 +193,8 @@ private:
  * @brief get reflected class info
  */
 template <typename T>
-auto reflect() {
-    return reflect_info<T>{};
+constexpr auto reflect() {
+    return reflect_info<std::remove_cv_t<std::remove_reference_t<T>>>{};
 }
 
 }  // namespace srefl

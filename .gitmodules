@@ -1,0 +1,3 @@
+[submodule "serd_backend/tomlplusplus"]
+	path = serd_backend/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

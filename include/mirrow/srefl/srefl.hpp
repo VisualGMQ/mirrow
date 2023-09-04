@@ -6,6 +6,7 @@
 
 #include <string_view>
 #include <utility>
+#include <functional>
 
 namespace mirrow {
 
@@ -84,31 +85,29 @@ inline constexpr std::string_view strip_name(std::string_view name) {
 /**
  * @brief extract class field(member variable, member function) info
  *
- * @tparam T
- * @tparam Attrs
+ * @tparam T type
+ * @tparam Attrs attributes
  */
 template <typename T, typename... Attrs>
 struct field_traits : internal::basic_field_traits<T, util::is_function_v<T>> {
-    explicit constexpr field_traits(T&& pointer, std::string_view name,
+    constexpr field_traits(T&& pointer, std::string_view name,
                                     Attrs&&... attrs)
         : pointer_(std::forward<T>(pointer)),
           name_(strip_name(name)),
           attrs_(std::forward<Attrs>(attrs)...) {}
 
-    using traits = field_traits<T>;
-
     /**
      * @brief check whether field is a const member(class const function)
      */
     constexpr bool is_const_member() const noexcept {
-        return internal::basic_field_traits<T, util::is_function_v<T>>::is_const_member();
+        return base::is_const_member();
     }
 
     /**
      * @brief check whether field is class member or static/global
      */
     constexpr bool is_member() const noexcept {
-        return internal::basic_field_traits<T, util::is_function_v<T>>::is_member();
+        return base::is_member();
     }
 
     /**
@@ -132,7 +131,22 @@ struct field_traits : internal::basic_field_traits<T, util::is_function_v<T>> {
         return attrs_;
     }
 
+    template <typename... Args>
+    auto invoke(Args&&... args) {
+        if constexpr (!util::is_function_v<T>) {
+            if constexpr (util::variable_traits<T>::is_member) {
+                return std::invoke(this->pointer_, std::forward<Args>(args)...);
+            } else {
+                return *(this->pointer_);
+            }
+        } else {
+            return std::invoke(this->pointer_, std::forward<Args>(args)...);
+        }
+    }
+
 private:
+    using base = internal::basic_field_traits<T, util::is_function_v<T>>;
+
     T pointer_;
     std::string_view name_;
     std::tuple<Attrs...> attrs_;
