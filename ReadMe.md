@@ -7,4 +7,4 @@ Nowadays, `mirrow` has these parts:
 * `utility`: some common utilities
 * `srefl`: static reflection framework
 * `drefl`: dynamic reflection framework(WIP)
-* `serd`: a serialize framework based on reflection(WIP)
+* `serd`: a serialize framework based on reflection(serial with drefl in WIP, with srefl is finished)

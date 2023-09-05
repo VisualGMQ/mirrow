@@ -16,7 +16,7 @@ public:
 
 // clang-format off
 #include "mirrow/srefl/srefl_begin.hpp"
-srefl_class(Foo) {
+srefl_class(Foo,
     ctors()
     fields(
         field(static_cast<void(Foo::*)(void)>(&Foo::foo)),
@@ -26,7 +26,7 @@ srefl_class(Foo) {
         field(&Foo::value_1),
         field(&Foo::value_2)
     )
-};
+)
 #include "mirrow/srefl/srefl_end.hpp"
 // clang-format on
 

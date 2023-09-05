@@ -132,7 +132,7 @@ struct field_traits : internal::basic_field_traits<T, util::is_function_v<T>> {
     }
 
     template <typename... Args>
-    auto invoke(Args&&... args) {
+    decltype(auto) invoke(Args&&... args) {
         if constexpr (!util::is_function_v<T>) {
             if constexpr (util::variable_traits<T>::is_member) {
                 return std::invoke(this->pointer_, std::forward<Args>(args)...);

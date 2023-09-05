@@ -35,7 +35,7 @@ std::string Person::family_name = "little home";
 
 // clang-format off
 #include "mirrow/srefl/srefl_begin.hpp"
-srefl_class(Person) {
+srefl_class(Person,
     bases()
     ctors(ctor(const std::string&, float))
     fields(
@@ -46,7 +46,7 @@ srefl_class(Person) {
         field(&Person::name),
         field(&Person::operator+)
     )
-};
+)
 #include "mirrow/srefl/srefl_end.hpp"
 // clang-format on
 

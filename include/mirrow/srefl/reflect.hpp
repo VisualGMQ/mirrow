@@ -151,6 +151,10 @@ public:
         }
     }
 
+    constexpr std::string_view name() const noexcept {
+        return type::name();
+    }
+
     /**
      * @brief runtime tool: visit all member functions
      */
