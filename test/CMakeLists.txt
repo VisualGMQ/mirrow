@@ -8,4 +8,5 @@ endmacro(AddTest)
 
 add_subdirectory(utility)
 add_subdirectory(srefl)
+add_subdirectory(drefl)
 add_subdirectory(serd)

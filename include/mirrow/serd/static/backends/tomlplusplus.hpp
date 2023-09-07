@@ -87,7 +87,7 @@ T serialize_directly(const T& value) {
 // for class serialize
 template <typename T>
 toml::table serialize_class(const T& value) {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    using type = util::remove_cvref_t<T>;
     ::mirrow::srefl::reflect_info<type> info = ::mirrow::srefl::reflect<type>();
     toml::table tbl;
     info.visit_member_variables([&tbl, &value](auto&& field) {
@@ -139,7 +139,7 @@ toml::table serialize_uset(const std::unordered_set<Key, Value>& tbl) {
  */
 template <typename T>
 auto serialize(const T& value) {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    using type = util::remove_cvref_t<T>;
 
     if constexpr (internal::can_serial_directly<T>) {
         return impl::serialize_directly(value);
@@ -197,7 +197,7 @@ T deserialize_directly(const toml::value<T>& value) {
 
 template <typename T>
 T deserialize(const toml::table& tbl) {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    using type = util::remove_cvref_t<T>;
 
     T instance;
 
@@ -258,7 +258,7 @@ T deserialize(const toml::table& tbl) {
 
 template <typename T>
 T deserialize(const toml::node& node) {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    using type = util::remove_cvref_t<T>;
 
     if constexpr (std::is_floating_point_v<type>) {
         if (node.is_floating_point()) {

@@ -2,6 +2,7 @@
 
 #include "mirrow/srefl/srefl.hpp"
 #include "mirrow/util/type_list.hpp"
+#include "mirrow/util/misc.hpp"
 
 #include <tuple>
 #include <type_traits>
@@ -63,7 +64,7 @@ constexpr auto inc_seq_elem(std::index_sequence<Idx...> seq) {
  */
 template <typename TupleType>
 constexpr auto tuple_tail(TupleType&& tuple) {
-    using tuple_type = std::remove_cv_t<std::remove_reference_t<TupleType>>;
+    using tuple_type = util::remove_cvref_t<TupleType>;
 
     if constexpr (util::list_size_v<tuple_type> >= 1) {
         return internal::pick_tuple_elements(
@@ -198,7 +199,7 @@ private:
  */
 template <typename T>
 constexpr auto reflect() {
-    return reflect_info<std::remove_cv_t<std::remove_reference_t<T>>>{};
+    return reflect_info<util::remove_cvref_t<T>>{};
 }
 
 }  // namespace srefl

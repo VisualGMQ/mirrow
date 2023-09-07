@@ -1,3 +1,4 @@
 AddTest(type_list)
 AddTest(function_traits)
 AddTest(variable_traits)
+AddTest(const_str)
