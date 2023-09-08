@@ -32,6 +32,13 @@ struct variable_node final {
     type_node* parent = nullptr;
     std::string name;
     bool is_member;
+    bool is_const;
+    bool is_reference;
+    bool is_pointer;
+    bool is_integral;
+    bool is_floating_pointer;
+    bool is_signed;
+    bool is_container;
     any(*invoke)(any*) = nullptr;
 };
 
@@ -110,7 +117,7 @@ struct info_node final {
 };
 
 struct registry final {
-    inline static type_node* root = nullptr;
+    inline static std::vector<type_node*> nodes;
 };
 
 }  // namespace internal

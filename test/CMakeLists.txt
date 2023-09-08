@@ -6,7 +6,7 @@ macro(AddTest name)
              COMMAND $<TARGET_FILE:${name}>)
 endmacro(AddTest)
 
-add_subdirectory(utility)
+add_subdirectory(util)
 add_subdirectory(srefl)
 add_subdirectory(drefl)
 add_subdirectory(serd)

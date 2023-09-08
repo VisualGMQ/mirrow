@@ -20,13 +20,26 @@ struct func_traits {
 
 template <auto F>
 struct var_traits {
+    using traits = util::variable_pointer_traits<F>;
+
     static any invoke(any* args) {
-        using traits = util::variable_pointer_traits<F>;
         if constexpr (traits::is_member) {
             return any{std::invoke(F, args->cast<typename traits::clazz*>())};
         } else {
             return any{*F};
         }
+    }
+
+    static unsigned long long cast_to_uint(void* instance) {
+        return *(typename traits::type*)(instance);
+    }
+
+    static long long cast_to_int(void* instance) {
+        return *(typename traits::type*)(instance);
+    }
+
+    static double cast_to_floating_point(void* instance) {
+        return *(typename traits::type*)(instance);
     }
 };
 
@@ -37,12 +50,10 @@ struct factory final {
     factory(const std::string& name) {
         internal::type_node* type = resolve();
         type->name = name;
-        if (internal::registry::root) {
-            internal::registry::root = type;
-        } else {
-            type->next = internal::registry::root;
-            internal::registry::root = type;
+        if (!internal::registry::nodes.empty()) {
+            internal::registry::nodes.back()->next = type;
         }
+        internal::registry::nodes.push_back(type);
     }
 
     template <typename... Args>
@@ -86,6 +97,13 @@ struct factory final {
             type,
             name,
             traits::is_member,
+            std::is_const_v<typename traits::type>,
+            std::is_reference_v<typename traits::type>,
+            std::is_pointer_v<typename traits::type>,
+            std::is_integral_v<typename traits::type>,
+            std::is_floating_point_v<typename traits::type>,
+            std::is_signed_v<typename traits::type>,
+            util::is_container_v<typename traits::type>,
             &var_traits<Func>::invoke,
         };
 

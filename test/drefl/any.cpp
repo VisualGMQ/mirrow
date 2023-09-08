@@ -101,4 +101,41 @@ TEST_CASE("invoke") {
         REQUIRE(&foo == &(params[0].cast<Foo>()));
         REQUIRE(foo.value == 3);
     }
+
+    SECTION("type detect and cast") {
+        {
+            int integral = 123;
+            mirrow::drefl::any a = integral;
+            REQUIRE(a.get_category() == mirrow::drefl::any::category::Integral);
+            REQUIRE(a.try_cast_integral().has_value());
+            REQUIRE(a.try_cast_integral().value() == 123);
+            REQUIRE_FALSE(a.try_cast_uintegral());
+            REQUIRE_FALSE(a.try_cast_floating_point());
+        }
+
+        {
+            float f = 2.345f;
+            mirrow::drefl::any a = f;
+            REQUIRE(a.get_category() == mirrow::drefl::any::category::FloatingPoint);
+            REQUIRE_FALSE(a.try_cast_integral());
+            REQUIRE(a.try_cast_floating_point());
+            REQUIRE(a.try_cast_floating_point().value() == 2.345f);
+            REQUIRE_FALSE(a.try_cast_uintegral());
+        }
+
+        {
+            std::vector<int> value = {1, 2, 3, 4};
+            mirrow::drefl::any a = value;
+            REQUIRE(a.get_category() == mirrow::drefl::any::category::Container);
+            REQUIRE_FALSE(a.try_cast_integral());
+            REQUIRE_FALSE(a.try_cast_floating_point());
+            REQUIRE_FALSE(a.try_cast_uintegral());
+
+            int count = 0;
+            a.travel_elements([&](mirrow::drefl::any& a){
+                count += a.try_cast_integral().value();
+            });
+            REQUIRE(count == 10);
+        }
+    }
 }

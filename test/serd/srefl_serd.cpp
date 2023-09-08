@@ -63,7 +63,7 @@ TEST_CASE("serd") {
     person.children.emplace_back("foo1", 100.0f, true);
     person.children.emplace_back("foo2", 120.3f, false);
     person.children.emplace_back("foo3", 130.3f, true);
-    auto person_serd = ::mirrow::serd::serialize(person);
+    auto person_serd = ::mirrow::serd::srefl::serialize(person);
 
     std::stringstream ss;
     ss << toml::toml_formatter{person_serd};
@@ -72,7 +72,7 @@ TEST_CASE("serd") {
 
     Person deserd_person;
 
-    deserd_person = ::mirrow::serd::deserialize<Person>(person_tbl);
+    deserd_person = ::mirrow::serd::srefl::deserialize<Person>(person_tbl);
 
     REQUIRE(deserd_person.name == "VisualGMQ");
     REQUIRE(deserd_person.height == 172.3f);

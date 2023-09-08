@@ -36,7 +36,7 @@ TEST_CASE("factory") {
 
     Person p("VisualGMQ", 123);
 
-    auto info = mirrow::drefl::resolve<Person>();
+    auto info = mirrow::drefl::meta_info<Person>();
     REQUIRE(info);
     REQUIRE(info.name() == "Person");
 

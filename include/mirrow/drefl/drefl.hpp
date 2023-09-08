@@ -9,8 +9,18 @@ namespace mirrow {
 namespace drefl {
 
 template <typename T>
-refl_info resolve() {
+refl_info meta_info() {
     return refl_info(internal::info_node<T>::type);
+}
+
+refl_info meta_info(std::string_view name) {
+    for (auto node : internal::registry::nodes) {
+        if (node->name == name) {
+            return refl_info(node);
+        }
+    }
+
+    return refl_info(nullptr);
 }
 
 }
