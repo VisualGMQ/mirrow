@@ -2,6 +2,7 @@
 
 #include "mirrow/drefl/info_node.hpp"
 
+#include <utility>
 #include <array>
 
 namespace mirrow {

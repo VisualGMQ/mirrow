@@ -92,8 +92,7 @@ public:
     template <typename T>
     auto& cast() {
         using type = util::remove_cvref_t<T>;
-        auto& value = *static_cast<type*>(instance_);
-        return value;
+        return *static_cast<type*>(instance_);
     }
 
     template <typename T>
@@ -169,6 +168,9 @@ private:
 
 namespace internal {
 
+template <typename T>
+struct show_tpl;
+
 template <auto Func, size_t... Indices>
 decltype(auto) invoke(any* args, std::index_sequence<Indices...>) {
     using fn_traits = util::function_pointer_traits<Func>;
@@ -176,16 +178,13 @@ decltype(auto) invoke(any* args, std::index_sequence<Indices...>) {
     static_assert(fn_traits::args_with_class::size == sizeof...(Indices),
                   "the number of function call arguments is inconsistent");
 
-    // MIRROW_ASSERT(((args + Indices)
-    //                    ->can_cast<util::remove_cvref_t<util::list_element_t<
-    //                        typename fn_traits::args_with_class, Indices>>>() &&
-    //                ...),
-    //               "invoke argument type not suitable");
+    std::cout << "indices: " << std::endl;
+    ((std::cout << Indices), ...);
 
     return std::invoke(
-        Func, (args + Indices)
+        Func, ((args + Indices)
                   ->cast<util::remove_cvref_t<util::list_element_t<
-                      typename fn_traits::args_with_class, Indices>>>()...);
+                      typename fn_traits::args_with_class, Indices>>>())...);
 }
 
 }  // namespace internal

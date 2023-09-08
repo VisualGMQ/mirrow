@@ -50,6 +50,7 @@ TEST_CASE("function pointer traits") {
     SECTION("member function") {
         using traits = function_pointer_traits<&Clazz::Foo>;
         static_assert(std::is_same_v<traits::args, type_list<>>);
+        static_assert(std::is_same_v<traits::args_with_class, type_list<Clazz*>>);
         static_assert(!traits::is_const);
         static_assert(traits::is_member);
         static_assert(std::is_same_v<traits::pointer, std::string(Clazz::*)(void)>);
@@ -60,6 +61,7 @@ TEST_CASE("function pointer traits") {
     SECTION("const member function") {
         using traits = function_pointer_traits<&Clazz::ConstFoo>;
         static_assert(std::is_same_v<traits::args, type_list<double>>);
+        static_assert(std::is_same_v<traits::args_with_class, type_list<Clazz*, double>>);
         static_assert(traits::is_const);
         static_assert(traits::is_member);
         static_assert(std::is_same_v<traits::pointer, void(Clazz::*)(double)const>);

@@ -32,6 +32,7 @@ TEST_CASE("factory") {
         .func<&Person::ChildSize>("ChildSize");
 
     Person p("VisualGMQ", 123);
+
     SECTION("member function") {
         auto info = mirrow::drefl::resolve<Person>();
         REQUIRE(info);
@@ -60,19 +61,12 @@ TEST_CASE("factory") {
             REQUIRE(!funcs[2].is_const());
             REQUIRE(funcs[2].is_member());
 
-            int a = 0;
+            size_t idx = 0;
 
-            std::array<mirrow::drefl::any, 2> params = {
-                mirrow::drefl::any{&p},
-                mirrow::drefl::any{a},
-            };
-
-            auto& np = std::invoke(&Person::AccessChild, &p, 0);
-
-            mirrow::drefl::internal::invoke<&Person::AccessChild>(params.data(), std::make_index_sequence<2>());
-            auto person = funcs[2].node_->invoke(params.data());
-            // auto& person = funcs[2].invoke(&p, 0).cast<Person&>();
-            REQUIRE(person.cast<Person&>().name == "XiaoMing");
+            // auto& person = funcs[2].invoke(&p, idx).cast<Person&>();
+            auto any_person = funcs[2].invoke(&p, idx);
+            auto& person = any_person.cast<Person&>();
+            REQUIRE(person.name == "XiaoMing");
         }
     }
 }
