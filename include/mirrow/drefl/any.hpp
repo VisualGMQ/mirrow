@@ -178,9 +178,6 @@ decltype(auto) invoke(any* args, std::index_sequence<Indices...>) {
     static_assert(fn_traits::args_with_class::size == sizeof...(Indices),
                   "the number of function call arguments is inconsistent");
 
-    std::cout << "indices: " << std::endl;
-    ((std::cout << Indices), ...);
-
     return std::invoke(
         Func, ((args + Indices)
                   ->cast<util::remove_cvref_t<util::list_element_t<

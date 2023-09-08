@@ -29,15 +29,18 @@ TEST_CASE("factory") {
         .func<&Person::GetName>("GetName")
         .func<&Person::GetHeight>("GetHeight")
         .func<&Person::AccessChild>("AccessChild")
-        .func<&Person::ChildSize>("ChildSize");
+        .func<&Person::ChildSize>("ChildSize")
+        .var<&Person::name>("name")
+        .var<&Person::height>("height")
+        .var<&Person::children>("children");
 
     Person p("VisualGMQ", 123);
 
-    SECTION("member function") {
-        auto info = mirrow::drefl::resolve<Person>();
-        REQUIRE(info);
-        REQUIRE(info.name() == "Person");
+    auto info = mirrow::drefl::resolve<Person>();
+    REQUIRE(info);
+    REQUIRE(info.name() == "Person");
 
+    SECTION("member function") {
         auto funcs = info.funcs();
         REQUIRE(funcs.size() == 4);
         {
@@ -63,10 +66,25 @@ TEST_CASE("factory") {
 
             size_t idx = 0;
 
-            // auto& person = funcs[2].invoke(&p, idx).cast<Person&>();
             auto any_person = funcs[2].invoke(&p, idx);
             auto& person = any_person.cast<Person&>();
             REQUIRE(person.name == "XiaoMing");
         }
+    }
+
+    SECTION("member variable") {
+        auto vars = info.vars();
+
+        REQUIRE(vars[0].name() == "name");
+        REQUIRE(vars[0].is_member());
+        REQUIRE(vars[0].invoke(&p).cast<const std::string&>() == "VisualGMQ");
+
+        REQUIRE(vars[1].name() == "height");
+        REQUIRE(vars[1].is_member());
+        REQUIRE(vars[1].invoke(&p).cast<float>() == 123);
+
+        REQUIRE(vars[2].name() == "children");
+        REQUIRE(vars[2].is_member());
+        REQUIRE(vars[2].invoke(&p).cast<const std::vector<Person>&>().empty());
     }
 }

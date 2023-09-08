@@ -74,6 +74,7 @@ struct variable_traits<T*>
 template <typename Class, typename T>
 struct variable_traits<T Class::*> : internal::basic_variable_traits<T Class::*> {
     using pointer = T Class::*;
+    using clazz = Class;
 };
 
 namespace detail {

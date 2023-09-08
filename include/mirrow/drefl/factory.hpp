@@ -2,6 +2,7 @@
 
 #include "mirrow/drefl/info_node.hpp"
 #include "mirrow/util/function_traits.hpp"
+#include "mirrow/util/variable_traits.hpp"
 #include "mirrow/util/type_list.hpp"
 #include "mirrow/drefl/any.hpp"
 
@@ -14,6 +15,18 @@ struct func_traits {
     static any invoke(any* args) {
         using traits = util::function_pointer_traits<F>;
         return any{internal::invoke<F>(args, std::make_index_sequence<traits::args_with_class::size>())};
+    }
+};
+
+template <auto F>
+struct var_traits {
+    static any invoke(any* args) {
+        using traits = util::variable_pointer_traits<F>;
+        if constexpr (traits::is_member) {
+            return any{std::invoke(F, args->cast<typename traits::clazz*>())};
+        } else {
+            return any{*F};
+        }
     }
 };
 
@@ -60,6 +73,24 @@ struct factory final {
 
         type->funcs.push_back(&node);
         internal::info_node<T>::template func<Func> = &node;
+
+        return *this;
+    }
+
+    template <auto Func>
+    factory& var(const std::string& name) {
+        internal::type_node* const type = resolve();
+        using traits = util::variable_pointer_traits<Func>;
+
+        static internal::variable_node node = {
+            type,
+            name,
+            traits::is_member,
+            &var_traits<Func>::invoke,
+        };
+
+        type->vars.push_back(&node);
+        internal::info_node<T>::template var<Func> = &node;
 
         return *this;
     }

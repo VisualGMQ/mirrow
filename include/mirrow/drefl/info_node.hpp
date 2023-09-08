@@ -32,7 +32,6 @@ struct variable_node final {
     type_node* parent = nullptr;
     std::string name;
     bool is_member;
-    bool is_const;
     any(*invoke)(any*) = nullptr;
 };
 
