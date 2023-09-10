@@ -10,6 +10,8 @@ namespace mirrow {
 
 namespace drefl {
 
+/*
+
 class function_descriptor final {
 public:
     using type = internal::function_node;
@@ -169,6 +171,8 @@ public:
 private:
     internal::type_node* type_;
 };
+
+*/
 
 }  // namespace drefl
 

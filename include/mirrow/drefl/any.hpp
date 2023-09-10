@@ -69,7 +69,7 @@ public:
     }
 
     template <typename T>
-    any(T&& o)
+    any(std::enable_if_t<!std::is_same_v<T, any>>&& o)
         : copy_(&traits<T>::copy),
           move_(&traits<T>::move),
           destroy_(&traits<T>::destroy),

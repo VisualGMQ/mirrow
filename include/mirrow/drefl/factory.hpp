@@ -1,10 +1,11 @@
 #pragma once
 
+#include "mirrow/assert.hpp"
+#include "mirrow/drefl/any.hpp"
 #include "mirrow/drefl/info_node.hpp"
 #include "mirrow/util/function_traits.hpp"
-#include "mirrow/util/variable_traits.hpp"
 #include "mirrow/util/type_list.hpp"
-#include "mirrow/drefl/any.hpp"
+#include "mirrow/util/variable_traits.hpp"
 
 namespace mirrow {
 
@@ -14,7 +15,8 @@ template <auto F>
 struct func_traits {
     static any invoke(any* args) {
         using traits = util::function_pointer_traits<F>;
-        return any{internal::invoke<F>(args, std::make_index_sequence<traits::args_with_class::size>())};
+        return any{internal::invoke<F>(
+            args, std::make_index_sequence<traits::args_with_class::size>())};
     }
 };
 
@@ -45,14 +47,21 @@ struct var_traits {
 
 template <typename T>
 struct factory final {
-    static_assert(std::is_class_v<T>, "currently factory only support regist class");
+    static_assert(std::is_class_v<T>,
+                  "currently factory only support regist class");
 
     factory(const std::string& name) {
+        static_assert(!util::is_complex_type_v<T>,
+                      "you can't reflect complex type(with "
+                      "const/volatile/reference/pointer/array)\n(hint: you can "
+                      "use mirrow::util::completely_strip_type_t to convert "
+                      "complex type to pure type)");
+
+        if (internal::info_node<T>::type) {
+            MIRROW_LOG("class has registed");
+        }
         internal::type_node* type = resolve();
         type->name = name;
-        if (!internal::registry::nodes.empty()) {
-            internal::registry::nodes.back()->next = type;
-        }
         internal::registry::nodes.push_back(type);
     }
 
@@ -76,8 +85,8 @@ struct factory final {
 
         static internal::function_node node = {
             type,
+            internal::info_node<decltype(Func)>::resolve(),
             name,
-            util::function_pointer_traits<Func>::is_member,
             util::function_pointer_traits<Func>::is_const,
             &func_traits<Func>::invoke,
         };
@@ -95,14 +104,12 @@ struct factory final {
 
         static internal::variable_node node = {
             type,
+            internal::info_node<decltype(Func)>::resolve(),
             name,
-            traits::is_member,
-            std::is_const_v<typename traits::type>,
-            std::is_reference_v<typename traits::type>,
-            std::is_pointer_v<typename traits::type>,
             std::is_integral_v<typename traits::type>,
             std::is_floating_point_v<typename traits::type>,
             std::is_signed_v<typename traits::type>,
+            std::is_same_v<util::completely_strip_type_t<typename traits::type>, std::string>,
             util::is_container_v<typename traits::type>,
             &var_traits<Func>::invoke,
         };
@@ -114,11 +121,9 @@ struct factory final {
     }
 
 private:
-    internal::type_node* resolve() {
-        return internal::info_node<T>::resolve();
-    }
+    internal::type_node* resolve() { return internal::info_node<T>::resolve(); }
 };
 
-}
+}  // namespace drefl
 
-}
+}  // namespace mirrow
