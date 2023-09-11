@@ -1,3 +1,6 @@
+#ifndef TOML_EXCEPTIONS
+#define TOML_EXCEPTIONS 0
+#endif
 #include "toml++/toml.hpp"
 
 #include "mirrow/serd/log.hpp"

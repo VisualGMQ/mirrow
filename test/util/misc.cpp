@@ -63,6 +63,7 @@ TEST_CASE("strip type") {
     REQUIRE(std::is_same_v<strip_type_t<const int**>, int>);
     REQUIRE(std::is_same_v<strip_type_t<const int&>, int>);
     REQUIRE(std::is_same_v<strip_type_t<const int&&>, int>);
+    REQUIRE(std::is_same_v<strip_type_t<int[3]>, int>);
     REQUIRE(std::is_same_v<strip_type_t<decltype(&Foo::foo)>, decltype(&Foo::foo)>);
     REQUIRE(std::is_same_v<strip_type_t<decltype(&Foo::value)>, decltype(&Foo::value)>);
 }

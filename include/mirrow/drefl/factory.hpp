@@ -106,11 +106,6 @@ struct factory final {
             type,
             internal::info_node<decltype(Func)>::resolve(),
             name,
-            std::is_integral_v<typename traits::type>,
-            std::is_floating_point_v<typename traits::type>,
-            std::is_signed_v<typename traits::type>,
-            std::is_same_v<util::completely_strip_type_t<typename traits::type>, std::string>,
-            util::is_container_v<typename traits::type>,
             &var_traits<Func>::invoke,
         };
 

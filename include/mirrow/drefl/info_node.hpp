@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mirrow/util/function_traits.hpp"
 #include "mirrow/util/misc.hpp"
 
 #include <string>
@@ -13,6 +14,7 @@ namespace drefl {
 class any;
 
 enum class type_category {
+    Compound,        // a compound type(with qualifier/reference/pointer/array)
     Fundamental,     // fundamental type(without pointer)
     Class,           // class type
     Function,        // function type: Ret(Param...)
@@ -41,11 +43,6 @@ struct variable_node final {
     type_node* parent = nullptr;
     type_node* type = nullptr;
     std::string name;
-    bool is_integral;
-    bool is_floating_pointer;
-    bool is_signed;
-    bool is_string;
-    bool is_container;
     any (*invoke)(any*) = nullptr;
 };
 
@@ -65,6 +62,14 @@ struct type_node final {
     bool is_volatile;
     bool is_array;
 
+    bool is_integral;
+    bool is_floating_pointer;
+    bool is_signed;
+    bool is_string;
+    bool is_container;
+
+    bool is_const_member;
+
     type_node* raw_type;  // type after remove pointer/reference/const/volatile
                           // qualifier:
 
@@ -76,18 +81,18 @@ struct type_node final {
 };
 
 template <typename T>
-constexpr type_category get_node_type() {
-    using type = util::remove_cvref_t<T>;
-
-    if constexpr (std::is_class_v<type>) {
+constexpr type_category get_node_category() {
+    if constexpr (!std::is_same_v<util::completely_strip_type_t<T>, T>) {
+        return type_category::Compound;
+    } else if constexpr (std::is_class_v<T>) {
         return type_category::Class;
-    } else if constexpr (std::is_function_v<type>) {
+    } else if constexpr (std::is_function_v<T>) {
         return type_category::Function;
-    } else if constexpr (std::is_member_object_pointer_v<type>) {
+    } else if constexpr (std::is_member_object_pointer_v<T>) {
         return type_category::MemberObject;
-    } else if constexpr (std::is_member_function_pointer_v<type>) {
+    } else if constexpr (std::is_member_function_pointer_v<T>) {
         return type_category::MemberFunction;
-    } else if constexpr (std::is_enum_v<type>) {
+    } else if constexpr (std::is_enum_v<T>) {
         return type_category::Enum;
     } else {
         return type_category::Fundamental;
@@ -111,7 +116,7 @@ std::string get_fundamental_type_name() {
         name = "long long";
     } else if constexpr (std::is_same_v<T, long int>) {
         name = "long int";
-    } 
+    }
 
     if constexpr (!std::is_signed_v<T>) {
         name = "unsigned " + name;
@@ -134,9 +139,8 @@ struct info_node final {
     inline static variable_node* var = nullptr;
 
     inline static type_node* resolve() {
-        using raw_type = util::completely_strip_type_t<T>;
         static type_node node = {
-            internal::get_node_type<raw_type>(),
+            internal::get_node_category<T>(),
             "undefined",
             std::is_member_pointer_v<T>,
             std::is_pointer_v<T>,
@@ -144,12 +148,28 @@ struct info_node final {
             std::is_const_v<std::remove_reference_t<T>>,
             std::is_volatile_v<T>,
             std::is_array_v<T>,
+
+            std::is_integral_v<T>,
+            std::is_floating_point_v<T>,
+            std::is_signed_v<T>,
+            std::is_same_v<T, std::string>,
+            util::is_container_v<T>,
+
+            false,
         };
         if (!type) {
             type = &node;
-            node.raw_type = info_node<util::completely_strip_type_t<T>>::resolve();
-            if constexpr (std::is_fundamental_v<raw_type>) {
-                node.name = get_fundamental_type_name<raw_type>();
+            node.raw_type =
+                info_node<util::completely_strip_type_t<T>>::resolve();
+            if constexpr (std::is_fundamental_v<T>) {
+                node.name = get_fundamental_type_name<T>();
+            }
+
+            using stripped_type = util::remove_cvref_t<T>;
+            if constexpr (std::is_function_v<stripped_type> ||
+                          std::is_member_function_pointer_v<stripped_type>) {
+                node.is_member_pointer =
+                    util::function_traits<stripped_type>::is_const;
             }
         }
         return type;

@@ -38,7 +38,7 @@ TEST_CASE("factory") {
     Person p("VisualGMQ", 123);
     mirrow::drefl::any param = &p;
 
-    auto info = mirrow::drefl::reflected_type<Person>();
+    auto info = mirrow::drefl::reflected_type<Person>().type_node();
     REQUIRE(info);
     REQUIRE(info->name == "Person");
 
@@ -47,7 +47,7 @@ TEST_CASE("factory") {
         {
             REQUIRE(info->funcs[0]->name == "GetName");
             REQUIRE(info->funcs[0]->is_const_member);
-            REQUIRE(info->funcs[0]->type == mirrow::drefl::reflected_type<decltype(&Person::GetName)>());
+            REQUIRE(info->funcs[0]->type == mirrow::drefl::reflected_type<decltype(&Person::GetName)>().type_node());
             REQUIRE(info->funcs[0]->invoke(&param).cast<const std::string&>() == "VisualGMQ");
             REQUIRE(info->funcs[0]->parent == info);
         }
@@ -55,7 +55,7 @@ TEST_CASE("factory") {
         {
             REQUIRE(info->funcs[1]->name == "GetHeight");
             REQUIRE(info->funcs[1]->is_const_member);
-            REQUIRE(info->funcs[1]->type == mirrow::drefl::reflected_type<decltype(&Person::GetHeight)>());
+            REQUIRE(info->funcs[1]->type == mirrow::drefl::reflected_type<decltype(&Person::GetHeight)>().type_node());
             REQUIRE(info->funcs[1]->invoke(&param).cast<float>() == 123);
             REQUIRE(info->funcs[1]->parent == info);
         }
@@ -81,21 +81,18 @@ TEST_CASE("factory") {
 
     SECTION("member variable") {
         REQUIRE(info->vars[0]->name == "name");
-        REQUIRE(info->vars[0]->is_string);
         REQUIRE(info->vars[0]->invoke(&param).cast<const std::string&>() == "VisualGMQ");
-        REQUIRE(info->vars[0]->type == mirrow::drefl::reflected_type<decltype(&Person::name)>());
+        REQUIRE(info->vars[0]->type == mirrow::drefl::reflected_type<decltype(&Person::name)>().type_node());
         REQUIRE(info->vars[0]->parent == info);
 
         REQUIRE(info->vars[1]->name == "height");
-        REQUIRE(info->vars[1]->is_floating_pointer);
         REQUIRE(info->vars[1]->invoke(&param).cast<float>() == 123);
-        REQUIRE(info->vars[1]->type == mirrow::drefl::reflected_type<decltype(&Person::height)>());
+        REQUIRE(info->vars[1]->type == mirrow::drefl::reflected_type<decltype(&Person::height)>().type_node());
         REQUIRE(info->vars[1]->parent == info);
 
         REQUIRE(info->vars[2]->name == "children");
-        REQUIRE(info->vars[2]->is_container);
         REQUIRE(info->vars[2]->invoke(&param).cast<const std::vector<Person>&>().empty());
-        REQUIRE(info->vars[2]->type == mirrow::drefl::reflected_type<decltype(&Person::children)>());
+        REQUIRE(info->vars[2]->type == mirrow::drefl::reflected_type<decltype(&Person::children)>().type_node());
         REQUIRE(info->vars[2]->parent == info);
     }
 }

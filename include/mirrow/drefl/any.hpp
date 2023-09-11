@@ -27,15 +27,6 @@ decltype(auto) invoke(any* args, std::index_sequence<Indices...>);
  */
 class any final {
 public:
-    enum class category {
-        Unknown,
-        Class,
-        Integral,
-        FloatingPoint,
-        Pointer,
-        Container,
-    };
-
     using storage_type = void*;
 
     any() = default;
@@ -45,7 +36,6 @@ public:
         : copy_(&traits<T>::copy),
           move_(&traits<T>::move),
           destroy_(&traits<T>::destroy),
-          get_category_(&traits<T>::get_type),
           try_cast_to_uint_(&traits<T>::try_cast_to_uint),
           try_cast_to_int_(&traits<T>::try_cast_to_int),
           try_cast_to_double_(&traits<T>::try_cast_to_double),
@@ -59,7 +49,6 @@ public:
         : copy_(&traits<T>::copy),
           move_(&traits<T>::move),
           destroy_(&traits<T>::destroy),
-          get_category_(&traits<T>::get_category),
           try_cast_to_uint_(&traits<T>::try_cast_to_uint),
           try_cast_to_int_(&traits<T>::try_cast_to_int),
           try_cast_to_double_(&traits<T>::try_cast_to_double),
@@ -73,7 +62,6 @@ public:
         : copy_(&traits<T>::copy),
           move_(&traits<T>::move),
           destroy_(&traits<T>::destroy),
-          get_category_(&traits<T>::get_category),
           try_cast_to_uint_(&traits<T>::try_cast_to_uint),
           try_cast_to_int_(&traits<T>::try_cast_to_int),
           try_cast_to_double_(&traits<T>::try_cast_to_double),
@@ -89,7 +77,6 @@ public:
           try_cast_to_uint_(o.try_cast_to_uint_),
           try_cast_to_int_(o.try_cast_to_int_),
           try_cast_to_double_(o.try_cast_to_double_),
-          get_category_(o.get_category_),
           travel_elements_(o.travel_elements_),
           type_(o.type_) {
         copy_(instance_, o.instance_);
@@ -133,7 +120,7 @@ public:
         return internal::info_node<std::decay_t<T>>::resolve() == type_;
     }
 
-    category get_category() const { return get_category_(); }
+    auto get_category() const { return type_->category; }
 
     auto try_cast_uintegral() { return try_cast_to_uint_(instance_); }
 
@@ -163,7 +150,7 @@ public:
 private:
     template <typename T>
     struct traits {
-        using type = std::decay_t<T>;
+        using type = util::remove_cvref_t<T>;
 
         template <typename... Args>
         static void* create(storage_type& storage, Args&&... args) {
@@ -190,22 +177,6 @@ private:
                 std::move(*static_cast<const type*>(from)));
             new (&to) type* {instance.get()};
             return instance.release();
-        }
-
-        static enum category get_category() {
-            if constexpr (util::is_container_v<type>) {
-                return category::Container;
-            } else if constexpr (std::is_class_v<type>) {
-                return category::Class;
-            } else if constexpr (std::is_integral_v<type>) {
-                return category::Integral;
-            } else if constexpr (std::is_floating_point_v<type>) {
-                return category::FloatingPoint;
-            } else if constexpr (std::is_pointer_v<type>) {
-                return category::Pointer;
-            } else {
-                return category::Unknown;
-            }
         }
 
         static std::optional<unsigned long long> try_cast_to_uint(
@@ -253,7 +224,6 @@ private:
     using copy_fn_type = void* (*)(storage_type&, const void*);
     using move_fn_type = void* (*)(storage_type&, const void*);
     using destroy_fn_type = void (*)(storage_type&);
-    using get_category_fn_type = category (*)(void);
     using try_cast_to_uint_fn_type =
         std::optional<unsigned long long> (*)(const storage_type&);
     using try_cast_to_int_fn_type =
@@ -266,7 +236,6 @@ private:
     copy_fn_type copy_ = nullptr;
     move_fn_type move_ = nullptr;
     destroy_fn_type destroy_ = nullptr;
-    get_category_fn_type get_category_ = nullptr;
     try_cast_to_uint_fn_type try_cast_to_uint_ = nullptr;
     try_cast_to_int_fn_type try_cast_to_int_ = nullptr;
     try_cast_to_double_fn_type try_cast_to_double_ = nullptr;
