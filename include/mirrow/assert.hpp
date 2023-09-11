@@ -4,7 +4,7 @@
 #include <iostream>
 
 #ifndef MIRROW_ASSERT
-#define MIRROW_ASSERT(x, expr) assert(((void)expr, x))
+#define MIRROW_ASSERT(x, expr) assert(((void)(expr), (x)))
 #endif
 
 #ifndef MIRROW_LOG

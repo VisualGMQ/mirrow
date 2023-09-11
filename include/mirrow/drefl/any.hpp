@@ -4,6 +4,7 @@
 #include "mirrow/drefl/info_node.hpp"
 #include "mirrow/util/function_traits.hpp"
 #include "mirrow/util/misc.hpp"
+#include "mirrow/drefl/type_info.hpp"
 
 #include <functional>
 #include <memory>
@@ -128,7 +129,7 @@ public:
 
     auto try_cast_floating_point() { return try_cast_to_double_(instance_); }
 
-    void travel_elements(const std::function<void(any&)>& func) {
+    void travel_elements(const std::function<void(any&, ::mirrow::drefl::type_info)>& func) {
         travel_elements_(instance_, func);
     }
 
@@ -145,7 +146,7 @@ public:
 
     operator bool() const noexcept { return has_value(); }
 
-    internal::type_node* const type_info() const { return type_; }
+    type_info const type_info() const { return ::mirrow::drefl::type_info{type_}; }
 
 private:
     template <typename T>
@@ -208,13 +209,13 @@ private:
         }
 
         static void travel_elements(storage_type& data,
-                                    const std::function<void(any&)>& func) {
+                                    const std::function<void(any&, ::mirrow::drefl::type_info)>& func) {
             if constexpr (util::is_container_v<type>) {
                 type& container = *static_cast<type*>(data);
                 for (auto& elem : container) {
                     any a = elem;
                     if (func) {
-                        func(a);
+                        func(a, a.type_info());
                     }
                 }
             }
@@ -231,7 +232,7 @@ private:
     using try_cast_to_double_fn_type =
         std::optional<double> (*)(const storage_type&);
     using travel_elements_fn_type = void (*)(storage_type&,
-                                             const std::function<void(any&)>&);
+                                             const std::function<void(any&, ::mirrow::drefl::type_info)>&);
 
     copy_fn_type copy_ = nullptr;
     move_fn_type move_ = nullptr;

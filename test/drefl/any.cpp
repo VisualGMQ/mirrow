@@ -38,7 +38,7 @@ TEST_CASE("any") {
     REQUIRE(gCopyCtorCount == 1);
     REQUIRE(gCopyAssignCount == 0);
     REQUIRE(gMoveCtorCount == 0);
-    REQUIRE(a.type_info() == mirrow::drefl::reflected_type<Foo>().type_node());
+    REQUIRE(a.type_info() == mirrow::drefl::reflected_type<Foo>());
     REQUIRE(a.has_value());
     REQUIRE(a.try_cast<Foo>()->value == 123);
     REQUIRE(a.try_cast<const Foo&>()->value == 123);
@@ -108,7 +108,7 @@ TEST_CASE("invoke") {
         {
             int integral = 123;
             mirrow::drefl::any a = integral;
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<int>().type_node());
+            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<int>());
             REQUIRE(a.try_cast_integral().has_value());
             REQUIRE(a.try_cast_integral().value() == 123);
             REQUIRE_FALSE(a.try_cast_uintegral());
@@ -118,7 +118,7 @@ TEST_CASE("invoke") {
         {
             float f = 2.345f;
             mirrow::drefl::any a = f;
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<float>().type_node());
+            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<float>());
             REQUIRE_FALSE(a.try_cast_integral());
             REQUIRE(a.try_cast_floating_point());
             REQUIRE(a.try_cast_floating_point().value() == 2.345f);
@@ -128,13 +128,13 @@ TEST_CASE("invoke") {
         {
             std::vector<int> value = {1, 2, 3, 4};
             mirrow::drefl::any a = value;
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<std::vector<int>>().type_node());
+            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<std::vector<int>>());
             REQUIRE_FALSE(a.try_cast_integral());
             REQUIRE_FALSE(a.try_cast_floating_point());
             REQUIRE_FALSE(a.try_cast_uintegral());
 
             int count = 0;
-            a.travel_elements([&](mirrow::drefl::any& a){
+            a.travel_elements([&](mirrow::drefl::any& a, mirrow::drefl::type_info){
                 count += a.try_cast_integral().value();
             });
             REQUIRE(count == 10);

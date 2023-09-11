@@ -25,8 +25,14 @@ struct var_traits {
     using traits = util::variable_pointer_traits<F>;
 
     static any invoke(any* args) {
+        auto info = args->type_info();
+        using clazz_type = typename traits::clazz;
         if constexpr (traits::is_member) {
-            return any{std::invoke(F, args->cast<typename traits::clazz*>())};
+            if (info.is_pointer()) {
+                return any{std::invoke(F, args->cast<clazz_type*>())};
+            } else {
+                return any{std::invoke(F, args->cast<clazz_type&>())};
+            }
         } else {
             return any{*F};
         }
