@@ -5,6 +5,7 @@
 
 #include <array>
 #include <iostream>
+#include <sstream>
 
 class Person {
 public:
@@ -15,8 +16,6 @@ public:
     float height;
     std::vector<Person> children;
 };
-
-
 
 TEST_CASE("serialization") {
     mirrow::drefl::factory<Person>("Person")
@@ -31,4 +30,12 @@ TEST_CASE("serialization") {
     mirrow::drefl::any data = &p;
     auto tbl = mirrow::sred::drefl::serialize_class(data);
     std::cout << toml::toml_formatter{tbl} << std::endl;
+
+    std::stringstream ss;
+    ss << toml::toml_formatter{tbl};
+
+    toml::table deserd_tbl = toml::parse(ss.str());
+
+    mirrow::drefl::any deserd = Person{"", 0.0};
+    mirrow::sred::drefl::deserialize_class(deserd, deserd_tbl);
 }

@@ -1,26 +1,24 @@
 #pragma once
 
+#include "mirrow/drefl/info_node.hpp"
+
+#include <vector>
+
 namespace mirrow {
 
 namespace drefl {
 
 class function_descriptor final {
 public:
-    friend any invoke_by_any(function_descriptor& func, any* args);
-
     using type = internal::function_node;
 
-    explicit function_descriptor(const type& n)
-        : node_(&n) {}
+    explicit function_descriptor(const type& n) : node_(&n) {}
 
     std::string_view name() const { return node_->name; }
+
     auto parent() const { return node_->parent; }
 
-    template <typename... Args>
-    any invoke(Args&&... args) const {
-        std::array<any, sizeof...(Args)> params = { any{std::forward<Args>(args)} ... };
-        return node_->invoke(params.data());
-    }
+    const type* node() const { return node_; }
 
 private:
     const type* node_;
@@ -30,19 +28,18 @@ class variable_descriptor final {
 public:
     friend any invoke_by_any(variable_descriptor& var, any* args);
 
+    template <typename... Args>
+    friend any invoke(function_descriptor& func, Args&&... args);
+
     using type = internal::variable_node;
 
-    explicit variable_descriptor(const type& n)
-        : node_(&n) {}
+    explicit variable_descriptor(const type& n) : node_(&n) {}
 
     std::string_view name() const { return node_->name; }
+
     auto parent() const { return node_->parent; }
 
-    template <typename... Args>
-    any invoke(Args&&... args) const {
-        std::array<any, sizeof...(Args)> params = { any{std::forward<Args>(args)} ... };
-        return node_->invoke(params.data());
-    }
+    const type* node() const { return node_; }
 
 private:
     const type* node_;
@@ -53,23 +50,18 @@ class field_container final {
 public:
     class iterator final {
     public:
-        iterator(const std::vector<T*>& container, size_t idx): container_(container), idx_(idx) {}
+        iterator(const std::vector<T*>& container, size_t idx)
+            : container_(container), idx_(idx) {}
 
         bool operator==(const iterator& o) const {
             return &o.container_ == &container_ && o.idx_ == idx_;
         }
 
-        bool operator!=(const iterator& o) const {
-            return !(*this == o);
-        }
+        bool operator!=(const iterator& o) const { return !(*this == o); }
 
-        iterator& operator+=(size_t step) {
-            return idx_ += step, *this;
-        }
+        iterator& operator+=(size_t step) { return idx_ += step, *this; }
 
-        iterator& operator-=(size_t step) {
-            return idx_ -= step, *this;
-        }
+        iterator& operator-=(size_t step) { return idx_ -= step, *this; }
 
         iterator operator+(size_t step) {
             iterator tmp = *this;
@@ -81,27 +73,21 @@ public:
             return tmp -= step;
         }
 
-        iterator& operator++() {
-            return *this += 1, *this;
-        }
+        iterator& operator++() { return *this += 1, *this; }
 
         iterator operator++(int) {
             iterator tmp = *this;
             return ++(*this), tmp;
         }
 
-        iterator& operator--() {
-            return *this -= 1, *this;
-        }
+        iterator& operator--() { return *this -= 1, *this; }
 
         iterator operator--(int) {
             iterator tmp = *this;
             return --(*this), tmp;
         }
 
-        Descriptor operator*() {
-            return Descriptor{*container_[idx_]};
-        }
+        Descriptor operator*() { return Descriptor{*container_[idx_]}; }
 
     private:
         const std::vector<T*>& container_;
@@ -118,22 +104,15 @@ public:
     using allocator_type = typename std::vector<T*>::allocator_type;
     using const_iterator = const iterator;
 
-
-    field_container(const std::vector<T*>& nodes): nodes_(nodes) {}
+    field_container(const std::vector<T*>& nodes) : nodes_(nodes) {}
 
     size_t size() const { return nodes_.size(); }
 
-    Descriptor operator[](size_t size) {
-        return Descriptor{*nodes_[size]};
-    }
+    Descriptor operator[](size_t size) { return Descriptor{*nodes_[size]}; }
 
-    const_iterator begin() const {
-        return iterator{nodes_, 0};
-    }
+    const_iterator begin() const { return iterator{nodes_, 0}; }
 
-    const_iterator end() const {
-        return iterator{nodes_, nodes_.size()};
-    }
+    const_iterator end() const { return iterator{nodes_, nodes_.size()}; }
 
     iterator begin() {
         return const_cast<iterator&&>(std::as_const(*this).begin());
@@ -147,10 +126,11 @@ private:
     const std::vector<T*>& nodes_;
 };
 
-using function_container = field_container<typename function_descriptor::type, function_descriptor>;
-using variable_container = field_container<typename variable_descriptor::type, variable_descriptor>;
+using function_container =
+    field_container<typename function_descriptor::type, function_descriptor>;
+using variable_container =
+    field_container<typename variable_descriptor::type, variable_descriptor>;
 
+}  // namespace drefl
 
-}
-
-}
+}  // namespace mirrow
