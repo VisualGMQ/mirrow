@@ -68,7 +68,7 @@ TEST_CASE("serd") {
     std::stringstream ss;
     ss << toml::toml_formatter{person_serd};
 
-    toml::table person_tbl = toml::parse(ss.str());
+    toml::table person_tbl = toml::parse(ss.str()).table();
 
     Person deserd_person;
 

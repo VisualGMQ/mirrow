@@ -15,7 +15,17 @@ public:
 
     bool is_floating_pointer() const { return type_->is_floating_pointer; }
 
+    bool is_boolean() const { return type_->is_boolean; }
+
     bool is_signed() const { return type_->is_signed; }
+
+    ctor_descriptor default_ctor() const { 
+        for (const auto& ctor : type_->ctors) {
+            if (ctor->params.empty()) {
+                return ctor_descriptor{*ctor};
+            }
+        }
+    }
 
 private:
     const internal::type_node* type_;
@@ -61,13 +71,19 @@ class class_type final {
 public:
     explicit class_type(const internal::type_node* type) : type_(type) {}
 
-    bool is_string() const { return type_->is_string; }
+    bool is_string() const { return type_->container_type == container_type::String; }
 
-    bool is_container() const { return type_->is_container; }
+    bool is_container() const { return type_->container_type != container_type::NotContainer; }
+
+    auto container_type() const { return type_->container_type; }
+
+    internal::type_node* container_value_type() const { return type_->container_value_type; }
 
     auto funcs() const { return function_container{type_->funcs}; }
 
     auto vars() const { return variable_container{type_->vars}; }
+
+    auto ctors() const { return ctor_container{type_->ctors}; }
 
 private:
     const internal::type_node* type_;
@@ -122,6 +138,12 @@ public:
     fundamental_type as_fundamental() const { return fundamental_type{type_}; }
 
     function_type as_function() const { return function_type{type_}; }
+
+    bool is_container() const { return type_->container_type != container_type::NotContainer; }
+    auto container_type() const { return type_->container_type; }
+    auto container_value_type_info() const { return type_->container_value_type; }
+
+    bool is_default_constructable() const { return type_->is_default_constructable; }
 
     member_function_type as_member_function() const {
         return member_function_type{type_};

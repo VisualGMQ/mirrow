@@ -5,6 +5,8 @@
 
 #include "mirrow/serd/log.hpp"
 #include "mirrow/srefl/reflect.hpp"
+#include "mirrow/util/misc.hpp"
+#include "mirrow/assert.hpp"
 
 #include <array>
 #include <cassert>
@@ -21,60 +23,22 @@ namespace srefl {
 
 namespace internal {
 
-namespace detail {
-
-template <typename T>
-struct is_vector {
-    static constexpr bool value = false;
-};
-
-template <typename T>
-struct is_vector<std::vector<T>> {
-    static constexpr bool value = true;
-};
-
-template <typename T>
-struct is_unordered_map {
-    static constexpr bool value = false;
-};
-
-template <typename K, typename V>
-struct is_unordered_map<std::unordered_map<K, V>> {
-    static constexpr bool value = true;
-};
-
-template <typename T>
-struct is_string {
-    static constexpr bool value = std::is_same_v<T, std::string>;
-};
-
-}  // namespace detail
-
-template <typename T>
-constexpr bool is_vector_v = detail::is_vector<T>::value;
-
-template <typename T>
-constexpr bool is_unordered_map = detail::is_unordered_map<T>::value;
-
-template <typename T>
-constexpr bool is_string_v = detail::is_string<T>::value;
-
 template <typename T>
 constexpr bool has_default_serial_method_v =
-    is_vector_v<T> || is_unordered_map<T> || is_string_v<T> ||
+    util::is_vector_v<T> || util::is_unordered_map_v<T> || util::is_string_v<T> ||
     std::is_fundamental_v<T>;
 
 template <typename T>
-constexpr bool can_serial_directly = is_string_v<T> || std::is_fundamental_v<T>;
+constexpr bool can_serial_directly = util::is_string_v<T> || std::is_fundamental_v<T>;
 
 template <typename T>
 constexpr bool has_default_deserial_method_v =
-    is_vector_v<T> || is_unordered_map<T> || is_string_v<T> ||
+    util::is_vector_v<T> || util::is_unordered_map_v<T> || util::is_string_v<T> ||
     std::is_fundamental_v<T>;
 
 template <typename T>
 constexpr bool can_deserial_directly =
-    is_string_v<T> || std::is_fundamental_v<T>;
+    util::is_string_v<T> || std::is_fundamental_v<T>;
 
 }  // namespace internal
 
@@ -148,9 +112,9 @@ auto serialize(const T& value) {
 
     if constexpr (internal::can_serial_directly<T>) {
         return impl::serialize_directly(value);
-    } else if constexpr (internal::is_vector_v<T>) {
+    } else if constexpr (util::is_vector_v<T>) {
         return impl::serialize_vector(value);
-    } else if constexpr (internal::is_unordered_map<T>) {
+    } else if constexpr (util::is_unordered_map_v<T>) {
         return impl::serialize_umap(value);
     } else {
         return impl::serialize_class(value);
@@ -192,52 +156,43 @@ std::unordered_map<Key, Value> deserialize_umap(const toml::table& tbl) {
     return result;
 }
 
-template <typename T>
-T deserialize_directly(const toml::value<T>& value) {
-    return value.get();
-}
-
 }  // namespace impl
 
 template <typename T>
+struct show_tmpl;
+
+template <typename T>
 T deserialize(const toml::table& tbl) {
-    using type = util::remove_cvref_t<T>;
+    static_assert(std::is_same_v<util::remove_cvref_t<T>, T>, "T can't has qualifier/reference");
 
     T instance;
 
-    auto type_info = ::mirrow::srefl::reflect<type>();
+    auto type_info = ::mirrow::srefl::reflect<T>();
 
     type_info.visit_member_variables([&tbl, &instance](auto& field) {
-        using type = typename std::remove_cv_t<
-            std::remove_reference_t<decltype(field)>>::type;
-        if constexpr (std::is_floating_point_v<type>) {
+        using type = typename util::remove_cvref_t<decltype(field)>::type;
+
+        if constexpr (std::is_floating_point_v<type> || std::is_integral_v<type>) {
             auto node = tbl[field.name()];
-            if (node.is_floating_point()) {
-                field.invoke(instance) = static_cast<type>(
-                    impl::deserialize_directly(*node.as_floating_point()));
-            } else {
-                LOG("node type is not floating point");
-            }
-        } else if constexpr (std::is_integral_v<type>) {
-            auto node = tbl[field.name()];
-            if (node.is_integer()) {
-                field.invoke(instance) =
-                    impl::deserialize_directly(*node.as_integer());
+            if (node.is_integer() || node.is_floating_point()) {
+                if (node.is_floating_point()) {
+                    field.invoke(instance) = static_cast<type>(node.as_floating_point()->get());
+                } else {
+                    field.invoke(instance) = static_cast<type>(node.as_integer()->get());
+                }
             } else if (node.is_boolean()) {
-                field.invoke(instance) =
-                    impl::deserialize_directly(*node.as_boolean());
+                field.invoke(instance) = static_cast<type>(node.as_boolean()->get());
             } else {
-                LOG("node type is not integral");
+                LOG("node type is not numeric");
             }
-        } else if constexpr (internal::is_string_v<type>) {
+        } else if constexpr (util::is_string_v<type>) {
             auto node = tbl[field.name()];
             if (node.is_string()) {
-                field.invoke(instance) =
-                    impl::deserialize_directly(*node.as_string());
+                field.invoke(instance) = node.as_string()->get();
             } else {
                 LOG("node type is not string");
             }
-        } else if constexpr (internal::is_vector_v<type>) {
+        } else if constexpr (util::is_vector_v<type>) {
             auto node = tbl[field.name()];
             if (node.is_array()) {
                 field.invoke(instance) =
@@ -246,7 +201,7 @@ T deserialize(const toml::table& tbl) {
             } else {
                 LOG("node type is not string");
             }
-        } else if constexpr (internal::is_unordered_map<type>) {
+        } else if constexpr (util::is_unordered_map_v<type>) {
             auto node = tbl[field.name()];
             if (node.is_table()) {
                 field.invoke(instance) =
@@ -285,19 +240,19 @@ T deserialize(const toml::node& node) {
         } else {
             LOG("node is not integral/boolean");
         }
-    } else if constexpr (internal::is_string_v<type>) {
+    } else if constexpr (util::is_string_v<type>) {
         if (node.is_string()) {
             return node.as_string()->get();
         } else {
             LOG("node is not string");
         }
-    } else if constexpr (internal::is_vector_v<type>) {
+    } else if constexpr (util::is_vector_v<type>) {
         if (node.is_array()) {
             return impl::deserialize_array<type>(*node.as_array());
         } else {
             LOG("node is not array");
         }
-    } else if constexpr (internal::is_unordered_map<type>) {
+    } else if constexpr (util::is_unordered_map_v<type>) {
         if (node.is_table()) {
             return impl::deserialize_umap<typename type::key_type,
                                           typename type::mapped_type>(
@@ -312,7 +267,7 @@ T deserialize(const toml::node& node) {
             LOG("node is not table");
         }
     } else {
-        assert(("don't support type", false));
+        MIRROW_ASSERT(false, "don't support type");
     }
 }
 

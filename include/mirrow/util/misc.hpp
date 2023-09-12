@@ -2,6 +2,13 @@
 
 #include <type_traits>
 #include <utility>
+#include <vector>
+#include <array>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
 
 namespace mirrow {
 
@@ -76,6 +83,72 @@ struct completely_strip_type<T, std::enable_if_t<is_complex_type_v<T>>> {
     using type = typename completely_strip_type<strip_type_t<T>>::type;
 };
 
+
+template <typename T>
+struct is_std_array {
+    static constexpr bool value = false;
+};
+
+template <typename T, size_t N>
+struct is_std_array<std::array<T, N>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_vector {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct is_vector<std::vector<T>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_unordered_map {
+    static constexpr bool value = false;
+};
+
+template <typename K, typename V>
+struct is_unordered_map<std::unordered_map<K, V>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_map {
+    static constexpr bool value = false;
+};
+
+template <typename K, typename V>
+struct is_map<std::map<K, V>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_set {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct is_set<std::set<T>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_unordered_set {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct is_unordered_set<std::unordered_set<T>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_string {
+    static constexpr bool value = std::is_same_v<T, std::string>;
+};
+
 }  // namespace detail
 
 /**
@@ -90,6 +163,29 @@ constexpr bool is_container_v = detail::is_container<T>::value;
  */
 template <typename T>
 using completely_strip_type_t = typename detail::completely_strip_type<T>::type;
+
+template <typename T>
+constexpr bool is_std_array_v = detail::is_std_array<T>::value;
+
+template <typename T>
+constexpr bool is_vector_v = detail::is_vector<T>::value;
+
+template <typename T>
+constexpr bool is_unordered_map_v = detail::is_unordered_map<T>::value;
+
+template <typename T>
+constexpr bool is_map_v = detail::is_map<T>::value;
+
+template <typename T>
+constexpr bool is_set_v = detail::is_set<T>::value;
+
+template <typename T>
+constexpr bool is_unordered_set_v = detail::is_unordered_set<T>::value;
+
+template <typename T>
+constexpr bool is_string_v = detail::is_string<T>::value;
+
+
 
 }  // namespace util
 

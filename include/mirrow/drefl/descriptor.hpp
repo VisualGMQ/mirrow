@@ -8,6 +8,26 @@ namespace mirrow {
 
 namespace drefl {
 
+class ctor_descriptor final {
+public:
+    friend any invoke_by_any(const ctor_descriptor& var, basic_any* args);
+
+    using type = internal::ctor_node;
+
+    explicit ctor_descriptor(const type& n) : node_(&n) {}
+
+    auto parent() const { return node_->parent; }
+
+    const type* node() const { return node_; }
+
+    auto& params() const {
+        return node_->params;
+    }
+
+private:
+    const type* node_;
+};
+
 class function_descriptor final {
 public:
     using type = internal::function_node;
@@ -26,10 +46,10 @@ private:
 
 class variable_descriptor final {
 public:
-    friend any invoke_by_any(variable_descriptor& var, any* args);
+    friend any invoke_by_any(const variable_descriptor& var, basic_any* args);
 
     template <typename... Args>
-    friend any invoke(function_descriptor& func, Args&&... args);
+    friend any invoke(const function_descriptor& func, Args&&... args);
 
     using type = internal::variable_node;
 
@@ -130,6 +150,8 @@ using function_container =
     field_container<typename function_descriptor::type, function_descriptor>;
 using variable_container =
     field_container<typename variable_descriptor::type, variable_descriptor>;
+
+using ctor_container = field_container<typename ctor_descriptor::type, ctor_descriptor>;
 
 }  // namespace drefl
 

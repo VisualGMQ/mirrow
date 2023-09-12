@@ -1,5 +1,3 @@
-#pragma once
-
 #undef MIRROW_SREFL_BEGIN
 
 }

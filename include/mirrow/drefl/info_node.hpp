@@ -11,7 +11,9 @@ namespace mirrow {
 
 namespace drefl {
 
+class basic_any;
 class any;
+class reference_any;
 
 enum class type_category {
     Compound,        // a compound type(with qualifier/reference/pointer/array)
@@ -23,12 +25,29 @@ enum class type_category {
     Enum,            // enumeration
 };
 
+enum class container_type {
+    NotContainer,   // not a container
+    FlatArray,      // flat array(like int[3])
+    Array,          // std::array
+    Vector,         // std::vector
+    UnorderedMap,   // std::unordered_map
+    Map,            // std::map
+    UnorderedSet,   // std::unordered_set
+    Set,            // std::set
+    String,         // std::string
+    Custom,         // user custom container
+};
+
 namespace internal {
 
 struct type_node;
 
 struct ctor_node final {
     type_node* parent = nullptr;
+
+    std::vector<type_node*> params;
+
+    any (*invoke)(basic_any*) = nullptr;
 };
 
 struct function_node final {
@@ -36,14 +55,16 @@ struct function_node final {
     type_node* type = nullptr;
     std::string name;
     bool is_const_member;
-    any (*invoke)(any*) = nullptr;
+    any (*invoke)(basic_any*) = nullptr;
+    reference_any (*invoke_by_ref)(basic_any*) = nullptr;
 };
 
 struct variable_node final {
     type_node* parent = nullptr;
     type_node* type = nullptr;
     std::string name;
-    any (*invoke)(any*) = nullptr;
+    any (*invoke)(basic_any*) = nullptr;
+    reference_any (*invoke_by_ref)(basic_any*) = nullptr;
 };
 
 struct dtor_node final {
@@ -64,9 +85,12 @@ struct type_node final {
 
     bool is_integral;
     bool is_floating_pointer;
+    bool is_boolean;
     bool is_signed;
-    bool is_string;
-    bool is_container;
+    bool is_default_constructable;
+
+    enum container_type container_type;
+    type_node* container_value_type;
 
     bool is_const_member;
 
@@ -126,6 +150,29 @@ std::string get_fundamental_type_name() {
 }
 
 template <typename T>
+container_type get_node_container_type() {
+    if constexpr (util::is_std_array_v<T>) {
+        return container_type::Array;
+    } else if constexpr (util::is_vector_v<T>) {
+        return container_type::Vector;
+    } else if constexpr (util::is_unordered_map_v<T>) {
+        return container_type::UnorderedMap;
+    } else if constexpr (util::is_map_v<T>) {
+        return container_type::Map;
+    } else if constexpr (util::is_set_v<T>) {
+        return container_type::Set;
+    } else if constexpr (util::is_unordered_set_v<T>) {
+        return container_type::UnorderedSet;
+    } else if constexpr (util::is_string_v<T>) {
+        return container_type::String;
+    } else if constexpr (util::is_container_v<T>) {
+        return container_type::Custom;
+    } else {
+        return container_type::NotContainer;
+    }
+}
+
+template <typename T>
 struct info_node final {
     inline static type_node* type = nullptr;
 
@@ -151,11 +198,14 @@ struct info_node final {
 
             std::is_integral_v<T>,
             std::is_floating_point_v<T>,
+            std::is_same_v<T, bool>,
             std::is_signed_v<T>,
-            std::is_same_v<T, std::string>,
-            util::is_container_v<T>,
+            std::is_default_constructible_v<T>,
 
+            get_node_container_type<T>(),
+            nullptr,
             false,
+            nullptr,
         };
         if (!type) {
             type = &node;
@@ -170,6 +220,27 @@ struct info_node final {
                           std::is_member_function_pointer_v<stripped_type>) {
                 node.is_member_pointer =
                     util::function_traits<stripped_type>::is_const;
+            }
+
+            if constexpr (util::is_container_v<stripped_type>) {
+                node.container_value_type = info_node<typename stripped_type::value_type>::resolve();
+            }
+
+            if constexpr (!std::is_array_v<T> && std::is_default_constructible_v<T>) {
+                if (std::is_array_v<T>) {
+                    MIRROW_LOG("I'm so sorry mirrow don't support default construct array in any");
+                } else {
+                    constexpr auto invoke = [](basic_any* args) {
+                        return any{T{}};
+                    };
+                    static ctor_node default_ctor = {
+                        &node,
+                        {},
+                        +invoke,
+                    };
+
+                    node.ctors.push_back(&default_ctor);
+                }
             }
         }
         return type;

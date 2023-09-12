@@ -1,6 +1,6 @@
 # Mirrow - A Template Meta Programming utility framework
 
-`mirrow` is  a TMP(template meta programming) utility header only framework in C++17. It aimed to make some utility to help programmer do TMP easier.
+`mirrow` is  a TMP(template meta programming) utility framework in C++17. It aimed to make some utility to help programmer do TMP easier.
 
 Nowadays, `mirrow` has these parts:
 

@@ -11,28 +11,40 @@ namespace drefl {
 
 template <typename... Args>
 any invoke(function_descriptor& func, Args&&... args) {
-    std::array<any, sizeof...(Args)> params = {
-        any{std::forward<Args>(args)}...};
+    std::array<reference_any, sizeof...(Args)> params = {
+        reference_any{std::forward<Args>(args)}...};
     return func.node()->invoke(params.data());
 }
 
 template <typename... Args>
 any invoke(variable_descriptor& func, Args&&... args) {
-    std::array<any, sizeof...(Args)> params = {
-        any{std::forward<Args>(args)}...};
+    std::array<reference_any, sizeof...(Args)> params = {
+        reference_any{std::forward<Args>(args)}...};
     return func.node()->invoke(params.data());
 }
 
-inline any invoke_by_any(function_descriptor& func, any* args) {
+inline any invoke_by_any(const function_descriptor& func, basic_any* args) {
     return func.node()->invoke(args);
 }
 
-inline any invoke_by_any(variable_descriptor& var, any* args) {
+inline any invoke_by_any(const variable_descriptor& var, basic_any* args) {
     return var.node()->invoke(args);
 }
 
+inline any invoke_by_any(const ctor_descriptor& ctor, basic_any* args) {
+    return ctor.node()->invoke(args);
+}
+
+inline reference_any invoke_by_any_return_ref(const function_descriptor& func, basic_any* args) {
+    return func.node()->invoke_by_ref(args);
+}
+
+inline reference_any invoke_by_any_return_ref(const variable_descriptor& var, basic_any* args) {
+    return var.node()->invoke_by_ref(args);
+}
+
 template <typename T>
-auto reflected_type() {
+mirrow::drefl::type_info reflected_type() {
     return mirrow::drefl::type_info{internal::info_node<T>::resolve()};
 }
 

@@ -1,5 +1,6 @@
 #include "mirrow/drefl/any.hpp"
 #include "mirrow/drefl/drefl.hpp"
+#include "mirrow/drefl/invoke_util.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -38,7 +39,7 @@ TEST_CASE("any") {
     REQUIRE(gCopyCtorCount == 1);
     REQUIRE(gCopyAssignCount == 0);
     REQUIRE(gMoveCtorCount == 0);
-    REQUIRE(a.type_info() == mirrow::drefl::reflected_type<Foo>());
+    REQUIRE(a.type() == mirrow::drefl::reflected_type<Foo>());
     REQUIRE(a.has_value());
     REQUIRE(a.try_cast<Foo>()->value == 123);
     REQUIRE(a.try_cast<const Foo&>()->value == 123);
@@ -83,13 +84,13 @@ TEST_CASE("invoke") {
     SECTION("simple parameters") {
         mirrow::drefl::any a{123};
 
-        auto result = mirrow::drefl::internal::invoke<inc>(&a, std::make_index_sequence<1>());
+        auto result = mirrow::drefl::invoke_by_any<inc>(&a, std::make_index_sequence<1>());
         REQUIRE(result == 124);
     }
 
     SECTION("parameter with const/reference") {
         mirrow::drefl::any a{Foo(123)};
-        auto& foo = mirrow::drefl::internal::invoke<clear_value>(&a, std::make_index_sequence<1>());
+        auto& foo = mirrow::drefl::invoke_by_any<clear_value>(&a, std::make_index_sequence<1>());
         REQUIRE(foo.value == 0);
         REQUIRE(&foo == &a.cast<Foo>());
     }
@@ -99,16 +100,16 @@ TEST_CASE("invoke") {
             mirrow::drefl::any(Foo(1)),
             mirrow::drefl::any(Foo(2)),
         };
-        auto& foo = mirrow::drefl::internal::invoke<sum_value>(params.data(), std::make_index_sequence<2>());
+        auto& foo = mirrow::drefl::invoke_by_any<sum_value>(params.data(), std::make_index_sequence<2>());
         REQUIRE(&foo == &(params[0].cast<Foo>()));
         REQUIRE(foo.value == 3);
     }
-
+    
     SECTION("type detect and cast") {
         {
             int integral = 123;
             mirrow::drefl::any a{integral};
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<int>());
+            REQUIRE(a.type() == mirrow::drefl::reflected_type<int>());
             REQUIRE(a.try_cast_integral().has_value());
             REQUIRE(a.try_cast_integral().value() == 123);
             REQUIRE_FALSE(a.try_cast_uintegral());
@@ -118,7 +119,7 @@ TEST_CASE("invoke") {
         {
             float f = 2.345f;
             mirrow::drefl::any a{f};
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<float>());
+            REQUIRE(a.type() == mirrow::drefl::reflected_type<float>());
             REQUIRE_FALSE(a.try_cast_integral());
             REQUIRE(a.try_cast_floating_point());
             REQUIRE(a.try_cast_floating_point().value() == 2.345f);
@@ -128,7 +129,7 @@ TEST_CASE("invoke") {
         {
             std::vector<int> value = {1, 2, 3, 4};
             mirrow::drefl::any a{value};
-            REQUIRE(a.type_info() == mirrow::drefl::reflected_type<std::vector<int>>());
+            REQUIRE(a.type() == mirrow::drefl::reflected_type<std::vector<int>>());
             REQUIRE_FALSE(a.try_cast_integral());
             REQUIRE_FALSE(a.try_cast_floating_point());
             REQUIRE_FALSE(a.try_cast_uintegral());
@@ -139,5 +140,43 @@ TEST_CASE("invoke") {
             });
             REQUIRE(count == 10);
         }
+    }
+}
+
+TEST_CASE("reference any") {
+    Foo foo(123);
+    mirrow::drefl::reference_any data = foo;
+
+    SECTION("cast") {
+        REQUIRE(data.cast<Foo>().value == 123);
+        REQUIRE(data.try_cast<Foo>());
+        REQUIRE(data.try_cast<Foo>()->value == 123);
+        REQUIRE_FALSE(data.try_cast<int>());
+        REQUIRE(data.type() == mirrow::drefl::reflected_type<Foo>());
+    }
+
+    SECTION("assignment") {
+        mirrow::drefl::reference_any ref = data;
+        REQUIRE(data.type() == ref.type());
+        REQUIRE(ref.cast<Foo>().value == 123);
+        REQUIRE(ref.try_cast<Foo>());
+        REQUIRE(ref.try_cast<Foo>()->value == 123);
+        REQUIRE_FALSE(ref.try_cast<int>());
+
+        ref.cast<Foo>().value = 456;
+        REQUIRE(data.cast<Foo>().value == 456);
+
+        mirrow::drefl::any concret = Foo{2};
+        ref = concret;
+        REQUIRE(ref.cast<Foo>().value == 2);
+        ref.cast<Foo>().value = 3;
+        REQUIRE(concret.cast<Foo>().value == 3);
+    }
+
+    SECTION("assignment numeric") {
+        float value = 123.0f;
+        mirrow::drefl::reference_any ref = value;
+        ref.deep_set(mirrow::drefl::any{234});
+        REQUIRE(ref.cast<float>() == 234.0f);
     }
 }

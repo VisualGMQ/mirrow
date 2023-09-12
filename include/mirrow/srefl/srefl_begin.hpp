@@ -4,9 +4,6 @@
  * @note use `srefl_end.hpp` when you finish reflect
  */
 
-#pragma once
-#include "mirrow/srefl/srefl.hpp"
-
 #define srefl_class(type, ...)                      \
     template <>                                     \
     struct type_info<type> : base_type_info<type> { \

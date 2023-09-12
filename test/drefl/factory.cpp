@@ -95,4 +95,11 @@ TEST_CASE("factory") {
         REQUIRE(info->vars[2]->type == mirrow::drefl::reflected_type<decltype(&Person::children)>().type_node());
         REQUIRE(info->vars[2]->parent == info);
     }
+
+    SECTION("member variable deep operator") {
+        mirrow::drefl::variable_descriptor name_desc(*info->vars[0]);
+        auto name = mirrow::drefl::invoke_by_any_return_ref(name_desc, &param);
+        name.cast<std::string>() = "GMQVailus";
+        REQUIRE(param.cast<Person*>()->name == "GMQVailus");
+    }
 }

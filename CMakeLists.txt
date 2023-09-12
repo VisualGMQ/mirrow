@@ -4,9 +4,10 @@ project(mirrow
     LANGUAGES CXX)
 
 
-add_library(mirrow INTERFACE)
-target_include_directories(mirrow INTERFACE ./include)
-target_compile_features(mirrow INTERFACE cxx_std_17)
+aux_source_directory(src/drefl mirrow_src)
+add_library(mirrow STATIC ${mirrow_src})
+target_include_directories(mirrow PUBLIC ./include)
+target_compile_features(mirrow PUBLIC cxx_std_17)
 
 if (PROJECT_IS_TOP_LEVEL)
     option(MIRROW_BUILD_TEST "build test" ON)
