@@ -17,6 +17,10 @@ public:
     std::vector<Person> children;
 };
 
+void foo(toml::node& node) {
+
+}
+
 TEST_CASE("serialization") {
     mirrow::drefl::factory<Person>("Person")
         .ctor<const std::string&, float>()
@@ -27,7 +31,7 @@ TEST_CASE("serialization") {
     Person p("VisualGMQ", 123.0);
     p.children.push_back(Person{"XiaoMing", 144});
     p.children.push_back(Person{"XiaoWang", 127});
-    mirrow::drefl::any data = &p;
+    mirrow::drefl::any data{p};
     auto tbl = mirrow::sred::drefl::serialize_class(data);
     std::cout << toml::toml_formatter{tbl} << std::endl;
 
@@ -36,6 +40,9 @@ TEST_CASE("serialization") {
 
     toml::table deserd_tbl = toml::parse(ss.str());
 
-    mirrow::drefl::any deserd = Person{"", 0.0};
-    mirrow::sred::drefl::deserialize_class(deserd, deserd_tbl);
+    // mirrow::drefl::any deserd{Person{"", 0.0}};
+    // mirrow::sred::drefl::deserialize_class(deserd, deserd_tbl);
+
+    toml::array arr;
+    foo(arr);
 }

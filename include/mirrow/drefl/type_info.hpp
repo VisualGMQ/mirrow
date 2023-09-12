@@ -148,3 +148,13 @@ private:
 }  // namespace drefl
 
 }  // namespace mirrow
+
+// hash support for type_info
+namespace std {
+    template <>
+    struct hash<mirrow::drefl::type_info> {
+        std::size_t operator()(const mirrow::drefl::type_info& type) const {
+            return std::hash<const mirrow::drefl::internal::type_node*>{}(type.type_node());
+        }
+    };
+}

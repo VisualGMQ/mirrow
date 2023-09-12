@@ -36,7 +36,7 @@ TEST_CASE("factory") {
         .var<&Person::children>("children");
 
     Person p("VisualGMQ", 123);
-    mirrow::drefl::any param = &p;
+    mirrow::drefl::any param{&p};
 
     auto info = mirrow::drefl::reflected_type<Person>().type_node();
     REQUIRE(info);

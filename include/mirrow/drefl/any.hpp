@@ -55,11 +55,13 @@ public:
           try_cast_to_double_(&traits<T>::try_cast_to_double),
           travel_elements_(&traits<T>::travel_elements),
           type_(internal::info_node<T>::resolve()) {
-        copy_(instance_, &o);
+        if (copy_) {
+            copy_(instance_, &o);
+        }
     }
 
     template <typename T>
-    any(std::enable_if_t<!std::is_same_v<T, any>>&& o)
+    any(std::enable_if_t<!std::is_same_v<T, any> && !std::is_same_v<T, std::nullptr_t>>&& o)
         : copy_(&traits<T>::copy),
           move_(&traits<T>::move),
           destroy_(&traits<T>::destroy),
@@ -68,8 +70,12 @@ public:
           try_cast_to_double_(&traits<T>::try_cast_to_double),
           travel_elements_(&traits<T>::travel_elements),
           type_(internal::info_node<T>::resolve()) {
-        move_(instance_, &o);
+        if (move_) {
+            move_(instance_, &o);
+        }
     }
+
+    explicit any(std::nullptr_t) {}
 
     any(const any& o)
         : copy_(o.copy_),
@@ -80,7 +86,9 @@ public:
           try_cast_to_double_(o.try_cast_to_double_),
           travel_elements_(o.travel_elements_),
           type_(o.type_) {
-        copy_(instance_, o.instance_);
+        if (copy_) {
+            copy_(instance_, o.instance_);
+        }
     }
 
     any(any&& o) { swap(*this, o); }
@@ -130,8 +138,10 @@ public:
     auto try_cast_floating_point() { return try_cast_to_double_(instance_); }
 
     void travel_elements(
-        const std::function<void(any&, ::mirrow::drefl::type_info)>& func) {
-        travel_elements_(instance_, func);
+        const std::function<void(any&)>& func) {
+        if (travel_elements_) {
+            travel_elements_(instance_, func);
+        }
     }
 
     template <typename T>
@@ -213,13 +223,13 @@ private:
 
         static void travel_elements(
             storage_type& data,
-            const std::function<void(any&, ::mirrow::drefl::type_info)>& func) {
+            const std::function<void(any&)>& func) {
             if constexpr (util::is_container_v<type>) {
                 type& container = *static_cast<type*>(data);
                 for (auto& elem : container) {
                     any a = elem;
                     if (func) {
-                        func(a, a.type_info());
+                        func(a);
                     }
                 }
             }
@@ -237,7 +247,7 @@ private:
         std::optional<double> (*)(const storage_type&);
     using travel_elements_fn_type =
         void (*)(storage_type&,
-                 const std::function<void(any&, ::mirrow::drefl::type_info)>&);
+                 const std::function<void(any&)>&);
 
     copy_fn_type copy_ = nullptr;
     move_fn_type move_ = nullptr;
