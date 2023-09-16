@@ -48,7 +48,7 @@ mirrow::drefl::type_info reflected_type() {
     return mirrow::drefl::type_info{internal::info_node<T>::resolve()};
 }
 
-auto reflected_type(std::string_view name) {
+inline auto reflected_type(std::string_view name) {
     const auto nodes = internal::registry::nodes;
     auto it = std::find_if(
         nodes.begin(), nodes.end(),

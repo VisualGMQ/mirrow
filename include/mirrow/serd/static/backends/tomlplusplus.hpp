@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef TOML_EXCEPTIONS
 #define TOML_EXCEPTIONS 0
 #endif

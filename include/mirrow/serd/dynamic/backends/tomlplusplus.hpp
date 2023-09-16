@@ -231,7 +231,7 @@ toml::table serialize_class(mirrow::drefl::any& data);
 
 namespace internal {
 
-void serialize_one_data(toml::node& node,
+inline void serialize_one_data(toml::node& node,
                         [[maybe_unused]] std::string_view name,
                         mirrow::drefl::any& data) {
     MIRROW_ASSERT(node.is_array() || node.is_table(),
@@ -378,7 +378,7 @@ inline void default_class_deserialize_method(
 
 }  // namespace internal
 
-toml::table serialize_class(mirrow::drefl::any& data) {
+inline toml::table serialize_class(mirrow::drefl::any& data) {
     auto type = data.type();
 
     MIRROW_ASSERT(type.is_class(), "can't serialize non-class type");
@@ -397,7 +397,7 @@ toml::table serialize_class(mirrow::drefl::any& data) {
     return result;
 }
 
-void deserialize_class(const toml::table& tbl,
+inline void deserialize_class(const toml::table& tbl,
                        mirrow::drefl::reference_any ref) {
     internal::deserialize_one_data(tbl, ref);
 }
