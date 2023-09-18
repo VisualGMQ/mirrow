@@ -2,6 +2,6 @@
 
 #include <iostream>
 
-#ifndef LOG
-#define LOG(expr) std::cout << (expr) << std::endl
+#ifndef MIRROW_LOG
+#define MIRROW_LOG(expr) std::cout << (expr) << std::endl
 #endif

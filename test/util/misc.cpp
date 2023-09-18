@@ -71,3 +71,9 @@ TEST_CASE("strip type") {
 TEST_CASE("completely strip type") {
     REQUIRE(std::is_same_v<completely_strip_type_t<const int*&>, int>);
 }
+
+TEST_CASE("inner type") {
+    REQUIRE(std::is_same_v<inner_type_t<std::optional<int>>, int>);
+    REQUIRE(std::is_same_v<inner_type_t<std::vector<float>>, float>);
+    REQUIRE(std::is_same_v<inner_type_t<std::unordered_map<float, int>>, std::pair<const float, int>>);
+}

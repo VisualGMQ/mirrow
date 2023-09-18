@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <optional>
 
 namespace mirrow {
 
@@ -95,6 +96,16 @@ struct is_std_array<std::array<T, N>> {
 };
 
 template <typename T>
+struct is_optional {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct is_optional<std::optional<T>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
 struct is_vector {
     static constexpr bool value = false;
 };
@@ -149,6 +160,16 @@ struct is_string {
     static constexpr bool value = std::is_same_v<T, std::string>;
 };
 
+template <typename T, typename = void>
+struct inner_type {
+    using type = T;
+};
+
+template <typename T>
+struct inner_type<T, std::void_t<typename T::value_type>> {
+    using type = typename T::value_type;
+};
+
 }  // namespace detail
 
 /**
@@ -185,7 +206,14 @@ constexpr bool is_unordered_set_v = detail::is_unordered_set<T>::value;
 template <typename T>
 constexpr bool is_string_v = detail::is_string<T>::value;
 
+template <typename T>
+constexpr bool is_optional_v = detail::is_optional<T>::value;
 
+/**
+ * @brief get container/std::optional inner type
+ */
+template <typename T>
+using inner_type_t = typename detail::inner_type<T>::type;
 
 }  // namespace util
 

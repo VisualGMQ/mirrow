@@ -34,6 +34,7 @@ public:
     bool male;
     float height;
     std::vector<Person> children;
+    std::optional<int> age;
 };
 
 std::string Person::family_name = "little home";
@@ -44,6 +45,7 @@ srefl_class(Person,
     bases()
     ctors(ctor(const std::string&, float))
     fields(
+        field(&Person::age),
         field(&Person::AddChild),
         field(&Person::children),
         field(&Person::male),
@@ -63,16 +65,21 @@ TEST_CASE("serd") {
     person.children.emplace_back("foo1", 100.0f, true);
     person.children.emplace_back("foo2", 120.3f, false);
     person.children.emplace_back("foo3", 130.3f, true);
+    person.age = 16;
     auto person_serd = ::mirrow::serd::srefl::serialize(person);
 
     std::stringstream ss;
     ss << toml::toml_formatter{person_serd};
 
+    // std::cout << toml::toml_formatter{person_serd} << std::endl;
+
     toml::table person_tbl = toml::parse(ss.str()).table();
 
     Person deserd_person;
 
-    deserd_person = ::mirrow::serd::srefl::deserialize<Person>(person_tbl);
+    ::mirrow::serd::srefl::deserialize<Person>(person_tbl, deserd_person);
+
+    toml::table tbl;
 
     REQUIRE(deserd_person.name == "VisualGMQ");
     REQUIRE(deserd_person.height == 172.3f);
@@ -81,4 +88,6 @@ TEST_CASE("serd") {
     REQUIRE(deserd_person.children[0] == person.children[0]);
     REQUIRE(deserd_person.children[1] == person.children[1]);
     REQUIRE(deserd_person.children[2] == person.children[2]);
+
+    REQUIRE(deserd_person.age.value() == 16);
 }
