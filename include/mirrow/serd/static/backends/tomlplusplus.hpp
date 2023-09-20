@@ -202,7 +202,7 @@ std::enable_if_t<util::is_unordered_map_v<T>> serialize_impl(
     static_assert(util::is_string_v<mapped_type>,
                   "the key of unordered_map must std::string");
 
-    for (auto& [key, value] : elems) {
+    for (auto& [key, value] : tbl) {
         using toml_type = serialize_destination_type_t<mapped_type>;
         toml_type new_node;
         serialize_impl<typename T::key_type>(value, new_node);
@@ -215,10 +215,10 @@ std::enable_if_t<util::is_unordered_set_v<T>> serialize_impl(
     const T& map, serialize_destination_type_t<T>& arr) {
     using value_type = util::remove_cvref_t<typename T::value_type>;
 
-    for (auto& elem : elems) {
+    for (auto& elem : arr) {
         using toml_type = serialize_destination_type_t<value_type>;
         toml_type new_node;
-        serialize_impl<value_type>(value, new_node);
+        serialize_impl<value_type>(elem, new_node);
         arr.push_back(new_node);
     }
 }
@@ -350,7 +350,7 @@ std::enable_if_t<util::is_std_array_v<T>> deserialize_impl(
 
     auto& arr = *node.as_array();
 
-    size_t suitable_size = std::min(N, arr.size());
+    size_t suitable_size = std::min(elems.size(), arr.size());
     for (int i = 0; i < suitable_size; i++) {
         deserialize<T>(arr[i], elems[i]);
     }
@@ -367,7 +367,7 @@ std::enable_if_t<util::is_unordered_map_v<T>> deserialize_impl(
 
     auto& tbl = *node.as_table();
     for (auto& [name, value] : tbl) {
-        elems.emplace(name, deserialize<Value>(value));
+        elems.emplace(name, deserialize<typename T::mapped_type>(value));
     }
 }
 
@@ -382,7 +382,7 @@ std::enable_if_t<util::is_unordered_set_v<T>> deserialize_impl(
 
     auto& arr = *node.as_array();
     for (auto& value : arr) {
-        arr.insert(deserialize<Value>(value));
+        arr.insert(deserialize<typename T::value_type>(value));
     }
 }
 
