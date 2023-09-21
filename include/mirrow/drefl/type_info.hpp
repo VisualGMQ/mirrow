@@ -91,6 +91,7 @@ private:
 
 class type_info final {
 public:
+    type_info(): type_(nullptr) {}
     explicit type_info(const internal::type_node* type) : type_(type) {}
 
     operator bool() const { return has_value(); }
