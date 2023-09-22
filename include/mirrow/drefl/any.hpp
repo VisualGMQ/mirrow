@@ -234,7 +234,7 @@ public:
                           std::is_floating_point_v<type>) {
                 if (o.type().is_fundamental()) {
                     auto fund = o.type().as_fundamental();
-                    if (fund.is_integral()) {
+                    if (fund.is_integer()) {
                         if (fund.is_signed()) {
                             auto num = o.try_cast_integral();
                             if (num) {
@@ -248,7 +248,7 @@ public:
                                     static_cast<type>(num.value());
                             }
                         }
-                    } else if (fund.is_floating_pointer()) {
+                    } else if (fund.is_floating_point()) {
                         auto num = o.try_cast_floating_point();
                         if (num) {
                             *static_cast<type*>(instance) =

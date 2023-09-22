@@ -140,6 +140,12 @@ std::string get_fundamental_type_name() {
         name = "long long";
     } else if constexpr (std::is_same_v<T, long int>) {
         name = "long int";
+    } else if constexpr (std::is_same_v<T, float>) {
+        name = "float";
+    } else if constexpr (std::is_same_v<T, double>) {
+        name = "double";
+    } else if constexpr (std::is_same_v<T, bool>) {
+        name = "bool";
     }
 
     if constexpr (!std::is_signed_v<T>) {

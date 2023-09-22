@@ -11,9 +11,9 @@ class fundamental_type final {
 public:
     explicit fundamental_type(const internal::type_node* type) : type_(type) {}
 
-    bool is_integral() const { return type_->is_integral; }
+    bool is_integer() const { return type_->is_integral; }
 
-    bool is_floating_pointer() const { return type_->is_floating_pointer; }
+    bool is_floating_point() const { return type_->is_floating_pointer; }
 
     bool is_boolean() const { return type_->is_boolean; }
 

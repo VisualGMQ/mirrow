@@ -111,14 +111,14 @@ private:
         }
 
         auto fund = type.as_fundamental();
-        if (fund.is_floating_pointer()) {
+        if (fund.is_floating_point()) {
             double value = data.try_cast_floating_point().value();
             if (node.is_table()) {
                 node.as_table()->emplace(name, value);
             } else if (node.is_array()) {
                 node.as_array()->push_back(value);
             }
-        } else if (fund.is_integral()) {
+        } else if (fund.is_integer()) {
             toml::int64_t value = 0;
             if (fund.is_signed()) {
                 value = data.try_cast_integral().value();
@@ -164,8 +164,8 @@ private:
         const toml::node& node, mirrow::drefl::reference_any& data) {
         auto type = data.type();
         MIRROW_ASSERT(type.is_fundamental() &&
-                          (type.as_fundamental().is_integral() ||
-                           type.as_fundamental().is_floating_pointer()),
+                          (type.as_fundamental().is_integer() ||
+                           type.as_fundamental().is_floating_point()),
                       "can't deserialize a non-fundamental type");
         if (node.is_integer()) {
             data.deep_set(mirrow::drefl::any{node.as_integer()->get()});

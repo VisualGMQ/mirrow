@@ -199,14 +199,14 @@ std::enable_if_t<util::is_unordered_map_v<T>> serialize_impl(
     const T& map, serialize_destination_type_t<T>& tbl) {
     using mapped_type = util::remove_cvref_t<typename T::mapped_type>;
 
-    static_assert(util::is_string_v<mapped_type>,
+    static_assert(util::is_string_v<typename T::key_type>,
                   "the key of unordered_map must std::string");
 
-    for (auto& [key, value] : tbl) {
+    for (auto& [key, value] : map) {
         using toml_type = serialize_destination_type_t<mapped_type>;
         toml_type new_node;
         serialize_impl<typename T::key_type>(value, new_node);
-        tbl[key] = new_node;
+        tbl.emplace(key, new_node);
     }
 }
 
@@ -395,8 +395,8 @@ std::enable_if_t<util::is_optional_v<T>> deserialize_impl(
 }
 
 template <typename T>
-std::enable_if_t<!impl::has_serialize_method_v<T>>
-deserialize_impl(const toml::node& node, T& instance) {
+std::enable_if_t<!impl::has_serialize_method_v<T>> deserialize_impl(
+    const toml::node& node, T& instance) {
     if (!node.is_table()) {
         MIRROW_LOG("deserialize class require TOML node is table type");
         return;
