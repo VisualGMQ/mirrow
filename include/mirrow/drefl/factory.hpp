@@ -93,9 +93,6 @@ struct var_traits {
 
 template <typename T>
 struct factory final {
-    // static_assert(std::is_class_v<T>,
-    //               "currently factory only support regist class");
-
     factory(const std::string& name) {
         static_assert(!util::is_complex_type_v<T>,
                       "you can't reflect complex type(with "

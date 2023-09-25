@@ -215,8 +215,14 @@ struct info_node final {
         };
         if (!type) {
             type = &node;
-            node.raw_type =
-                info_node<util::completely_strip_type_t<T>>::resolve();
+
+            if constexpr (std::is_member_object_pointer_v<T>) {
+                node.raw_type =
+                    info_node<util::completely_strip_type_t<util::variable_type_t<T>>>::resolve();
+            } else {
+                node.raw_type =
+                    info_node<util::completely_strip_type_t<T>>::resolve();
+            }
             if constexpr (std::is_fundamental_v<T>) {
                 node.name = get_fundamental_type_name<T>();
             }
