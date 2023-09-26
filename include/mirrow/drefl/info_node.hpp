@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mirrow/util/function_traits.hpp"
+#include "mirrow/util/variable_traits.hpp"
 #include "mirrow/util/misc.hpp"
 
 #include <string>

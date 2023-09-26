@@ -14,6 +14,12 @@ public:
 
     using type = internal::ctor_node;
 
+    ctor_descriptor(): node_(nullptr) {}
+
+    operator bool() const {
+        return node_;
+    }
+
     explicit ctor_descriptor(const type& n) : node_(&n) {}
 
     auto parent() const { return node_->parent; }
@@ -118,7 +124,7 @@ public:
 
     using value_type = T;
     using reference = value_type&;
-    using const_reference = const reference;
+    using const_reference = const value_type&;
     using pointer = value_type*;
     using const_pointer = const pointer;
     using size_type = typename std::vector<T*>::size_type;

@@ -25,6 +25,8 @@ public:
                 return ctor_descriptor{*ctor};
             }
         }
+
+        return {};
     }
 
 private:

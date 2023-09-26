@@ -66,7 +66,8 @@ TEST_CASE("serd") {
     person.children.emplace_back("foo2", 120.3f, false);
     person.children.emplace_back("foo3", 130.3f, true);
     person.age = 16;
-    auto person_serd = ::mirrow::serd::srefl::serialize(person);
+    toml::table person_serd;
+    ::mirrow::serd::srefl::serialize(person, person_serd);
 
     std::stringstream ss;
     ss << toml::toml_formatter{person_serd};
