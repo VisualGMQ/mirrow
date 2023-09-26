@@ -115,10 +115,18 @@ int main() {
 then use
 
 ```cpp
-auto info = mirrow::drefl::reflected_type<Person>().type_node();
+auto info = mirrow::drefl::reflected_type<Person>();
 ```
 
 to get registed type information;
+
+you can also use class name to get reflected info:
+
+```cpp
+auto info = mirrow::drefl::reflected_type("Person");
+```
+
+**NOTE:currently we allow types with the same name to exist, this may fixed later.**
 
 the core type info class is `mirrow::drefl::type_info`, you can get many information from here(some examples):
 
@@ -235,4 +243,17 @@ the second and thrid param is your serialize/deserialize function, must be:
 void serialize(toml::node&, std::string_view name, mirrow::drefl::any&)>;
 // deserialize
 void deserialize(const toml::node&, mirrow::drefl::reference_any&)>;
+```
+
+after these, you can use serialize/deserialize:
+
+```cpp
+Person p;
+mirrow::drefl::reference_any any{p};
+
+// serialize to toml node
+auto tbl = ::mirrow::serd::drefl::serialize(any);
+
+// deserialize from toml node
+::mirrow::serd::drefl::deserialize(tbl, p);
 ```

@@ -61,6 +61,11 @@ inline auto reflected_type(std::string_view name) {
     }
 }
 
+// TODO: wrapper this to support `type_info`
+inline auto& all_reflected_type() {
+    return internal::registry::nodes;
+};
+
 }  // namespace drefl
 
 }  // namespace mirrow

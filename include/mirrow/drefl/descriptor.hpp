@@ -61,6 +61,8 @@ public:
 
     const type* node() const { return node_; }
 
+    auto raw_type() const { return node_->type->raw_type;}
+
 private:
     const type* node_;
 };
