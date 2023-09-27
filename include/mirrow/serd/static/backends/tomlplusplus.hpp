@@ -167,6 +167,7 @@ serialize(
     ::mirrow::srefl::reflect_info<type> info = ::mirrow::srefl::reflect<type>();
     info.visit_member_variables([&tbl, &value](auto&& field) {
         auto& member = field.invoke(&value);
+
         if constexpr (util::is_optional_v<
                           util::remove_cvref_t<decltype(member)>>) {
             if (!member.has_value()) {

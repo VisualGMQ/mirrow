@@ -96,7 +96,7 @@ public:
     type_info(): type_(nullptr) {}
     explicit type_info(const internal::type_node* type) : type_(type) {}
 
-    operator bool() const { return has_value(); }
+    explicit operator bool() const { return has_value(); }
 
     bool has_value() const { return type_ != nullptr; }
 
