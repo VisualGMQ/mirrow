@@ -52,3 +52,31 @@ TEST_CASE("reflect") {
     });
     REQUIRE(vars == std::vector<std::string_view>{"value_1", "value_2"});
 }
+
+enum class MyEnum {
+    Value1 = 1,
+    Value2 = 2,
+    Value3 = 3,
+};
+
+// clang-format off
+#include "mirrow/srefl/srefl_begin.hpp"
+srefl_enum(MyEnum,
+    enum_value(MyEnum::Value1, "Value1"),
+    enum_value(MyEnum::Value2, "Value2"),
+    enum_value(MyEnum::Value3, "Value3")
+)
+#include "mirrow/srefl/srefl_end.hpp"
+    // clang-format on
+
+TEST_CASE("reflect enum") {
+    auto enum_type = reflect<MyEnum>();
+    auto& values = enum_type.enum_values();
+
+    REQUIRE(values[0].name == "Value1");
+    REQUIRE(values[1].name == "Value2");
+    REQUIRE(values[2].name == "Value3");
+    REQUIRE(static_cast<int>(values[0].value) == 1);
+    REQUIRE(static_cast<int>(values[1].value) == 2);
+    REQUIRE(static_cast<int>(values[2].value) == 3);
+}

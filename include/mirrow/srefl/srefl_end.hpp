@@ -8,3 +8,4 @@
 #undef bases
 #undef ctors
 #undef ctor
+#undef enum_value

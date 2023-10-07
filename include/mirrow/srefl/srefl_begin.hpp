@@ -4,6 +4,8 @@
  * @note use `srefl_end.hpp` when you finish reflect
  */
 
+#include <array>
+
 #define srefl_class(type, ...)                      \
     template <>                                     \
     struct type_info<type> : base_type_info<type> { \
@@ -26,6 +28,20 @@
 #define ctors(...) using ctors = util::type_list<__VA_ARGS__>;
 
 #define ctor(...) ctor<__VA_ARGS__>
+
+#define srefl_enum(type, ...)                               \
+    template <>                                             \
+    struct type_info<type> : base_type_info<type> {         \
+        static constexpr std::string_view name() {          \
+            return #type;                                   \
+        }                                                   \
+        static constexpr std::array enums = {__VA_ARGS__}; \
+    };
+
+#define enum_value(value, name) \
+    enum_value {                \
+        value, name             \
+    }
 
 #ifdef MIRROW_SREFL_BEGIN
 #error \

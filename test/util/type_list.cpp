@@ -42,9 +42,9 @@ struct IsInt<int> {
 };
 
 template <typename T>
-void FilterEven(T value) {
-    return value % 2 == 0;
-}
+struct AddPointer {
+    using type = T*;
+};
 
 TEST_CASE("utility functions") {
     static_assert(disjunction_v<list, IsInt>);
@@ -54,4 +54,6 @@ TEST_CASE("utility functions") {
 
     static_assert(std::is_same_v<list_filter_t<list, std::is_integral>, type_list<int, char>>);
     static_assert(std::is_same_v<list_filter_t<type_list<>, std::is_integral>, type_list<>>);
+
+    static_assert(std::is_same_v<list_foreach_t<type_list<char, int, float>, AddPointer>, type_list<char*, int*, float*>>);
 }

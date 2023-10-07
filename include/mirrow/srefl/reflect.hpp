@@ -114,6 +114,20 @@ public:
     }
 
     /**
+     * @brief check whether the type is class
+     */
+    constexpr bool is_class() const noexcept {
+        return std::is_class_v<T>;
+    }
+
+    /**
+     * @brief check whether the type is enum
+     */
+    constexpr bool is_enum() const noexcept {
+        return std::is_enum_v<T>;
+    }
+
+    /**
      * @brief check whether class has base classes
      */
     constexpr bool has_bases() const noexcept { return has_bases_v<type>; }
@@ -127,6 +141,14 @@ public:
      * @brief check whether class has fields
      */
     constexpr bool has_fields() const noexcept { return has_fields_v<type>; }
+
+    constexpr decltype(auto) enum_values() const noexcept {
+        if constexpr (std::is_enum_v<T>) {
+            return type::enums;
+        } else {
+            return std::array<enum_value<int>, 0>{};
+        }
+    }
 
     /**
      * @brief runtime tool: visit all fields

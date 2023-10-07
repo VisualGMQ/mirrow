@@ -33,22 +33,11 @@ public:
 
 std::string Person::family_name = "little home";
 
-// clang-format off
-#include "mirrow/srefl/srefl_begin.hpp"
-srefl_class(Person,
-    bases()
-    ctors(ctor(const std::string&, float))
-    fields(
-        field(&Person::AddChild),
-        field(&Person::children),
-        field(&Person::Height),
-        field(&Person::Name),
-        field(&Person::name),
-        field(&Person::operator+)
-    )
-)
-#include "mirrow/srefl/srefl_end.hpp"
-// clang-format on
+enum class MyEnum {
+    Value1 = 1,
+    Value2,
+    Value3,
+};
 
 TEST_CASE("strip name") {
     static_assert(strip_name("Person") == "Person");
@@ -60,7 +49,8 @@ TEST_CASE("strip name") {
 
 TEST_CASE("field traits") {
     SECTION("member function") {
-        constexpr auto traits = field_traits{&Person::AddChild, "&Person::AddChild"};
+        constexpr auto traits =
+            field_traits{&Person::AddChild, "&Person::AddChild"};
         static_assert(std::is_same_v<decltype(traits)::return_type, void>);
         static_assert(std::is_same_v<decltype(traits)::args,
                                      mirrow::util::type_list<const Person&>>);
@@ -81,9 +71,11 @@ TEST_CASE("field traits") {
     }
 
     SECTION("member const function") {
-        constexpr auto traits = field_traits{&Person::Height, "&Person::Height"};
+        constexpr auto traits =
+            field_traits{&Person::Height, "&Person::Height"};
         static_assert(std::is_same_v<decltype(traits)::return_type, float>);
-        static_assert(std::is_same_v<decltype(traits)::args, mirrow::util::type_list<>>);
+        static_assert(
+            std::is_same_v<decltype(traits)::args, mirrow::util::type_list<>>);
         static_assert(traits.is_const_member());
         static_assert(traits.is_member());
         static_assert(traits.pointer() == &Person::Height);
@@ -100,16 +92,19 @@ TEST_CASE("field traits") {
     }
 
     SECTION("member variable") {
-        constexpr auto traits = field_traits(&Person::children, "&Person::children");
+        constexpr auto traits =
+            field_traits(&Person::children, "&Person::children");
         static_assert(!traits.is_const_member());
         static_assert(traits.is_member());
-        static_assert(std::is_same_v<decltype(traits)::type, std::vector<Person>>);
+        static_assert(
+            std::is_same_v<decltype(traits)::type, std::vector<Person>>);
         static_assert(traits.pointer() == &Person::children);
         static_assert(traits.name() == "children");
     }
 
     SECTION("static member variable") {
-        constexpr auto traits = field_traits(&Person::family_name, "&Person::family_name");
+        constexpr auto traits =
+            field_traits(&Person::family_name, "&Person::family_name");
         static_assert(!traits.is_member());
         static_assert(std::is_same_v<decltype(traits)::type, std::string>);
         static_assert(traits.pointer() == &Person::family_name);

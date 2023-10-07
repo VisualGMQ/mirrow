@@ -135,6 +135,21 @@ using apply_to_element_t = typename detail::apply_to_element<List, N, F>::type;
 namespace detail {
 
 template <typename List, template <typename> typename F>
+struct list_foreach { };
+
+template <template <typename...> typename ListType, template <typename> typename F, typename... Ts>
+struct list_foreach<ListType<Ts...>, F> {
+    using type = ListType<typename F<Ts>::type ...>;
+};
+
+}
+
+template <typename List, template <typename> typename F>
+using list_foreach_t = typename detail::list_foreach<List, F>::type;
+
+namespace detail {
+
+template <typename List, template <typename> typename F>
 struct disjunction {
     static constexpr bool value =
         F<util::list_head_t<List>>::value ||

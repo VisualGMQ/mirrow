@@ -174,6 +174,18 @@ struct base_type_info {
     static constexpr bool is_final = std::is_final_v<T>;
 };
 
+template <typename T>
+struct enum_value {
+    using value_type = T;
+    // using underlying_type = std::underlying_type_t<T>;
+
+    constexpr enum_value(value_type value, std::string_view name)
+        : value{value}, name{name} {}
+
+    T value;
+    std::string_view name;
+};
+
 /**
  * @brief store class type info
  *
