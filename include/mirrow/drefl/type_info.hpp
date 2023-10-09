@@ -94,7 +94,7 @@ private:
 class type_info final {
 public:
     type_info(): type_(nullptr) {}
-    explicit type_info(const internal::type_node* type) : type_(type) {}
+    type_info(const internal::type_node* type) : type_(type) {}
 
     explicit operator bool() const { return has_value(); }
 
@@ -163,8 +163,10 @@ public:
     const internal::type_node* type_node() const { return type_; }
 
     bool operator==(const type_info& o) const { return o.type_ == type_; }
+    bool operator==(const internal::type_node* type) const { return type == type_; }
 
     bool operator!=(const type_info& o) const { return !(o == *this); }
+    bool operator!=(const internal::type_node* type) const { return !(*this != type_); }
 
 private:
     const internal::type_node* type_;
