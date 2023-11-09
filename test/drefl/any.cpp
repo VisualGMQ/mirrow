@@ -36,9 +36,9 @@ struct Foo {
 
 TEST_CASE("any") {
     mirrow::drefl::any a{Foo{123}};
-    REQUIRE(gCopyCtorCount == 1);
+    REQUIRE(gCopyCtorCount == 0);
     REQUIRE(gCopyAssignCount == 0);
-    REQUIRE(gMoveCtorCount == 0);
+    REQUIRE(gMoveCtorCount == 1);
     REQUIRE(a.type() == mirrow::drefl::reflected_type<Foo>());
     REQUIRE(a.has_value());
     REQUIRE(a.try_cast<Foo>()->value == 123);
@@ -50,17 +50,17 @@ TEST_CASE("any") {
 
     mirrow::drefl::any b;
     b = a;
-    REQUIRE(gCopyCtorCount == 2);
+    REQUIRE(gCopyCtorCount == 1);
     REQUIRE(gCopyAssignCount == 0);
-    REQUIRE(gMoveCtorCount == 0);
+    REQUIRE(gMoveCtorCount == 1);
     REQUIRE(b.has_value());
     REQUIRE(a.has_value());
     REQUIRE(b.try_cast<Foo>()->value == 123);
 
     mirrow::drefl::any c = std::move(b);
-    REQUIRE(gCopyCtorCount == 2);
+    REQUIRE(gCopyCtorCount == 1);
     REQUIRE(gCopyAssignCount == 0);
-    REQUIRE(gMoveCtorCount == 0);
+    REQUIRE(gMoveCtorCount == 1);
     REQUIRE(!b.has_value());
     REQUIRE(c.has_value());
     REQUIRE(c.try_cast<Foo>()->value == 123);

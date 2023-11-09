@@ -101,7 +101,7 @@ struct factory final {
                       "complex type to pure type)");
 
         if (internal::info_node<T>::type) {
-            MIRROW_LOG("class has registed");
+            MIRROW_LOG(name + " class has registed");
         }
         internal::type_node* type = resolve();
         type->name = name;

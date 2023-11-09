@@ -3,6 +3,7 @@ project(mirrow
     VERSION 0.1.0
     LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 aux_source_directory(src/drefl mirrow_src)
 add_library(mirrow STATIC ${mirrow_src})

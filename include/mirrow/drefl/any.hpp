@@ -224,7 +224,7 @@ public:
 
         static void* move(storage_type& to, const void* from) {
             auto instance = std::make_unique<type>(
-                std::move(*static_cast<const type*>(from)));
+                std::move(*(type*)(from)));
             new (&to) type* {instance.get()};
             return instance.release();
         }
@@ -260,6 +260,8 @@ public:
                 auto data = o.try_cast<type>();
                 if (data) {
                     *static_cast<type*>(instance) = *data;
+                } else {
+                    MIRROW_LOG("any inner type can't be copy");
                 }
             }
         }
@@ -392,10 +394,15 @@ public:
         if (!inst) {
             inst = std::make_unique<any_methods>();
 
-            inst->basic_ops_.copy = &basic_op_traits<T>::copy;
             inst->basic_ops_.steal = &basic_op_traits<T>::move;
             inst->basic_ops_.destroy = &basic_op_traits<T>::destroy;
-            inst->basic_ops_.deep_set = &basic_op_traits<T>::deep_set;
+            if constexpr (std::is_copy_assignable_v<T> && std::is_copy_constructible_v<T>) {
+                inst->basic_ops_.copy = &basic_op_traits<T>::copy;
+                inst->basic_ops_.deep_set = &basic_op_traits<T>::deep_set;
+            } else {
+                inst->basic_ops_.deep_set = nullptr;
+                inst->basic_ops_.copy = nullptr;
+            }
 
             inst->numeric_cast_.try_cast_uintegral =
                 &numeric_op_traits<T>::try_cast_to_uint;
