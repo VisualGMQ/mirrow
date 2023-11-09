@@ -20,9 +20,9 @@ namespace drefl {
 
 namespace internal {
 void default_class_serialize_method(toml::node&, std::string_view,
-                                    mirrow::drefl::any&);
+                                    mirrow::drefl::basic_any&);
 void default_container_serialize_method(toml::node&, std::string_view,
-                                        mirrow::drefl::any&);
+                                        mirrow::drefl::basic_any&);
 void default_class_deserialize_method(const toml::node&,
                                       mirrow::drefl::reference_any&);
 void default_container_deserialize_method(const toml::node&,
@@ -32,7 +32,7 @@ void default_container_deserialize_method(const toml::node&,
 class serd_method_registry final {
 public:
     using serial_type = std::function<void(toml::node&, std::string_view name,
-                                           mirrow::drefl::any&)>;
+                                           mirrow::drefl::basic_any&)>;
     using deserial_type =
         std::function<void(const toml::node&, mirrow::drefl::reference_any&)>;
     using key_type = mirrow::drefl::type_info;
@@ -103,7 +103,7 @@ private:
 
     static void default_numeric_serialize_method(toml::node& node,
                                                  std::string_view name,
-                                                 mirrow::drefl::any& data) {
+                                                 mirrow::drefl::basic_any& data) {
         auto type = data.type();
         if (!type.is_fundamental()) {
             MIRROW_LOG("can't serialize a non-numeric type");
@@ -147,7 +147,7 @@ private:
 
     static void default_string_serialize_method(toml::node& node,
                                                 std::string_view name,
-                                                mirrow::drefl::any& data) {
+                                                mirrow::drefl::basic_any& data) {
         auto type = data.type();
         MIRROW_ASSERT(type.is_class() && type.as_class().is_string(),
                       "can't serialize a non-string type");
@@ -227,7 +227,7 @@ private:
     }
 };
 
-toml::table serialize_class(mirrow::drefl::any& data);
+toml::table serialize_class(mirrow::drefl::basic_any& data);
 
 namespace internal {
 
@@ -273,7 +273,7 @@ inline void serialize_one_data(toml::node& node,
 
 inline void default_container_serialize_method(
     toml::node& node, [[maybe_unused]] std::string_view name,
-    mirrow::drefl::any& data) {
+    mirrow::drefl::basic_any& data) {
     auto type = data.type();
     MIRROW_ASSERT(
         type.is_array() || (type.is_class() && type.as_class().is_container()),
@@ -289,7 +289,7 @@ inline void default_container_serialize_method(
 
 inline void default_class_serialize_method(
     toml::node& node, [[maybe_unused]] std::string_view name,
-    mirrow::drefl::any& data) {
+    mirrow::drefl::basic_any& data) {
     auto type = data.type();
 
     MIRROW_ASSERT(node.is_table(),
@@ -378,7 +378,7 @@ inline void default_class_deserialize_method(
 
 }  // namespace internal
 
-inline toml::table serialize_class(mirrow::drefl::any& data) {
+inline toml::table serialize_class(mirrow::drefl::basic_any& data) {
     auto type = data.type();
 
     MIRROW_ASSERT(type.is_class(), "can't serialize non-class type");
