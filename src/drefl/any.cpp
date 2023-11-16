@@ -1,83 +1,84 @@
 #include "mirrow/drefl/any.hpp"
-#include "mirrow/drefl/invoke_util.hpp"
 
-namespace mirrow {
+namespace mirrow::drefl {
 
-namespace drefl {
+any::any(any&& o)
+    : access_(o.access_), payload_(o.payload_), operations_(o.operations_), type_(o.type_) {
+    o.access_ = access_type::Null;
+    o.payload_ = nullptr;
+}
 
-basic_any::basic_any(internal::type_node* type, const any_methods* methods)
-    : type_(type), methods_(methods) {}
-
-void basic_any::reset() {
-    if (methods_->basic().destroy) {
-        methods_->basic().destroy(instance_);
-        instance_ = nullptr;
-        methods_ = nullptr;
+any::any(const any& o) {
+    switch (o.access_) {
+        case access_type::Null:
+            access_ = access_type::Null;
+            payload_ = nullptr;
+            operations_ = &type_operations::null;
+            break;
+        case access_type::ConstRef:
+        case access_type::Ref:
+            payload_ = o.payload_;
+            access_ = o.access_;
+            operations_ = o.operations_;
+            break;
+        case access_type::Copy:
+            payload_ = o.operations_->copy_construct(o.payload_);
+            access_ = o.access_;
+            operations_ = o.operations_;
+            break;
     }
+    type_ = o.type_;
 }
 
-std::optional<unsigned long long> basic_any::try_cast_uintegral() const {
-    return methods_->numeric_cast().try_cast_uintegral(instance_);
-}
-
-std::optional<long long> basic_any::try_cast_integral() const {
-    return methods_->numeric_cast().try_cast_integral(instance_);
-}
-
-std::optional<double> basic_any::try_cast_floating_point() const {
-    return methods_->numeric_cast().try_cast_floating_pointer(instance_);
-}
-
-void basic_any::deep_set(const basic_any& o) {
-    methods_->basic().deep_set(instance_, o);
-}
-
-void basic_any::push_back(const basic_any& data) {
-    if (methods_ && methods_->container().push_back) {
-        methods_->container().push_back(instance_, data);
+any& any::operator=(const any& o) {
+    if (access_ == access_type::Copy) {
+        operations_->destroy(payload_);
+        payload_ = nullptr;
     }
+
+    type_ = o.type_;
+
+    switch (o.access_) {
+        case access_type::Null:
+            access_ = access_type::Null;
+            payload_ = nullptr;
+            operations_ = &type_operations::null;
+            break;
+        case access_type::ConstRef:
+        case access_type::Ref:
+            access_ = o.access_;
+            payload_ = o.payload_;
+            operations_ = o.operations_;
+            break;
+        case access_type::Copy:
+            access_ = o.access_;
+            payload_ = o.operations_->copy_construct(o.payload_);
+            operations_ = o.operations_;
+            break;
+    }
+
+    return *this;
 }
 
-size_t basic_any::size() {
-    if (methods_ && methods_->container().size) {
-        return methods_->container().size(instance_);
-    } else {
-        return 0;
-    }
-}
+any& any::operator=(any&& o) {
+    if (&o != this) {
+        payload_ = o.payload_;
+        access_ = o.access_;
+        operations_ = o.operations_;
+        type_ = o.type_;
 
-type_info basic_any::elem_type() {
-    if (methods_ && methods_->container().size) {
-        return methods_->container().elem_type();
+        o.payload_ = nullptr;
+        o.access_ = access_type::Null;
+        o.operations_ = &type_operations::null;
+        o.type_ = nullptr;
     }
-    return type_info{nullptr};
-}
-
-void basic_any::travel_elements(const std::function<void(any&)>& func) {
-    if (methods_->container().travel) {
-        methods_->container().travel(instance_, func);
-    }
-}
-
-void basic_any::travel_elements_by_ref(
-    const std::function<void(reference_any&)>& func) {
-    if (methods_->container().travel_by_ref) {
-        methods_->container().travel_by_ref(instance_, func);
-    }
-}
-
-any::any(const any& o) : basic_any(o) {
-    if (methods_ && methods_->basic().copy) {
-        methods_->basic().copy(instance_, o.instance_);
-    }
+    return *this;
 }
 
 any::~any() {
-    if (methods_ && methods_->basic().destroy) {
-        methods_->basic().destroy(instance_);
+    if (access_ == access_type::Copy && operations_) {
+        operations_->destroy(payload_);
     }
 }
 
-}  // namespace drefl
-
-}  // namespace mirrow
+}  // namespace mirrow::drefl

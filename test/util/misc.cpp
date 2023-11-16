@@ -1,5 +1,6 @@
 #include "mirrow/util/misc.hpp"
 #include <string>
+#include <type_traits>
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -13,9 +14,6 @@ TEST_CASE("remove cvref") {
     REQUIRE(std::is_same_v<remove_cvref_t<int&&>, int>);
     REQUIRE(std::is_same_v<remove_cvref_t<const int&&>, int>);
 }
-
-template <typename T>
-struct show_tmpl;
 
 TEST_CASE("remove all pointer") {
     REQUIRE(std::is_same_v<remove_all_pointers_t<int>, int>);
@@ -76,4 +74,20 @@ TEST_CASE("inner type") {
     REQUIRE(std::is_same_v<inner_type_t<std::optional<int>>, int>);
     REQUIRE(std::is_same_v<inner_type_t<std::vector<float>>, float>);
     REQUIRE(std::is_same_v<inner_type_t<std::unordered_map<float, int>>, std::pair<const float, int>>);
+}
+
+TEST_CASE("pointer layer") {
+    REQUIRE(pointer_layer_v<int> == 0);
+    REQUIRE(pointer_layer_v<int*> == 1);
+    REQUIRE(pointer_layer_v<const int*> == 1);
+    REQUIRE(pointer_layer_v<int**> == 2);
+    REQUIRE(pointer_layer_v<const int***> == 3);
+}
+
+TEST_CASE("remove all pointers") {
+    REQUIRE(std::is_same_v<remove_all_pointers_t<int*>, int>);
+    REQUIRE(std::is_same_v<remove_all_pointers_t<int**>, int>);
+    REQUIRE(std::is_same_v<remove_all_pointers_t<const int*>, const int>);
+    REQUIRE(std::is_same_v<remove_all_pointers_t<const int* const>, const int>);
+    REQUIRE(std::is_same_v<remove_all_pointers_t<int* const>, int>);
 }

@@ -7,13 +7,13 @@ Nowadays, `mirrow` has these parts:
 * `util`: some common utilities
 * `srefl`: static reflection framework
 * `drefl`: dynamic reflection framework
-* `serd`: a serialize framework based on reflection(serial with drefl in WIP, with srefl is finished)
+* `serd`: a serialize framework based on reflection(serial with `drefl`&`srefl`)
 
 ## :book: docs
 
 ### util
 
-util(utility) has some convenient utility to do TMP:
+`util`(utility) has some convenient utility to do TMP:
 
 * `type_list`: compile-time type list. [:microscope: unittest](./test/utility/type_list.cpp)
 * `function_traits`: compile-time function info trait. [:microscope: unittest](./test/utility/function_traits.cpp)
@@ -73,75 +73,103 @@ refl.visit_member_variables([&vars](auto&& value) {
 
 ### drefl
 
-dynamic reflection framework. :microscope: [unittest](./test/drefl/factory.cpp)
-    
-regist your type by:
+dynamic reflection framework.
+
+#### any
+
+`any` is similar to `std::any`, but support ownership  :microscope:[unittest](./test/drefl/any.cpp)
+
+`any` has 3 ownership(defined in `any::access_type`):
+
+*   `Null`: don't contain data
+*   `ConstRef`: const reference to a value
+*   `Ref`: mutable reference to a value
+*   `Copy`: the data's ownership is any itself, when any destruct, data will destruct together
+
+use `any_make_xxx` to create an any from ownership:
 
 ```cpp
-class Person {
-public:
-    Person(const std::string& name, float height)
-        : name(name), height(height) {}
+int a = 123;
+auto cref = mirrow::drefl::any_make_constref(a);	// make a const reference
+auto ref = mirrow::drefl::any_make_ref(a);	// make a reference
+auto new_value = mirrow::drefl::any_make_copy(a); // copy a to any inner data
+```
 
-    const std::string& GetName() const { return name; }
+and use member function `constref()`, `ref()`, `copy()`, `steal()` to translate ownership.
 
-    float GetHeight() const { return height; }
 
-    Person& AccessChild(size_t idx) { return children[idx]; }
 
-    size_t ChildSize() const { return children.size(); }
+use `try_cast()` & `try_cast_const()` to cast any to a determined type. use `try_cast()` on `ConstRef` any will throw a `bad_any_access` exception and return `nullptr`.
 
+#### factory
+
+`factory` is where you reflect your type:microscope:[unittest](./test/drefl/factory.cpp)
+
+register your class by:
+
+```cpp
+struct Person {
     std::string name;
     float height;
-    std::vector<Person> children;
+    const bool hasChild;
+    const Person* couple;
 };
 
-int main() {
-    mirrow::drefl::factory<Person>("Person")
-        // regist constructor
-        .ctor<const std::string&, float>()
-        // regist member/non-member function
-        .func<&Person::GetName>("GetName")
-        .func<&Person::GetHeight>("GetHeight")
-        .func<&Person::AccessChild>("AccessChild")
-        .func<&Person::ChildSize>("ChildSize")
-        // regist variable
-        .var<&Person::name>("name")
-        .var<&Person::height>("height")
-        .var<&Person::children>("children");
-}
+// in main():
+mirrow::drefl::factory<Person>::instance()
+              .regist("Person")
+              .property("name", &Person::name)
+              .property("height", &Person::height)
+              .property("hasChild", &Person::hasChild)
+              .property("couple", &Person::couple);
+```
+
+or register your enum by:
+
+```cpp
+enum class MyEnum {
+        Value1 = 1,
+        Value2 = 2,
+        Value3 = 3,
+    };
+
+// in main():
+auto& inst = mirrow::drefl::factory<MyEnum>::instance()
+    .regist("MyEnum")
+    .add("Value1", MyEnum::Value1)
+    .add("Value2", MyEnum::Value2)
+    .add("Value3", MyEnum::Value3);	
 ```
 
 then use
 
 ```cpp
-auto info = mirrow::drefl::reflected_type<Person>();
+auto info = mirrow::drefl::typeinfo<Person>();
 ```
 
-to get registed type information;
+to get registered type information;
 
-you can also use class name to get reflected info:
+**NOTE: currently we don't support register member function.**
 
-```cpp
-auto info = mirrow::drefl::reflected_type("Person");
-```
 
-**NOTE:currently we allow types with the same name to exist, this may fixed later.**
 
-the core type info class is `mirrow::drefl::type_info`, you can get many information from here(some examples):
+there are may type information you can access(by member function`as_xxx()`):
 
-```cpp
-type.is_fundamental();  // check type is fundamental type(numeric type)
+*   `enum_info`: enumerates
+*   `numeric`: numerics(`int`,`float`,`char`...)
+*   `boolean`: boolean
+*   `string`:`std::string` or `std::string_view` (may add `const char*` support later)
+*   `pointer`: pointers like `T*`, `T* const`, `T**`...
+*   `array`: `std::vector`, `std::array`, `std::list`, `T[N]`
+*   `class`: other classes
 
-if (type.is_class()) {
-    auto class_info = type.as_class();
-}
-...
-```
+*future support:*
 
-another important type is `mirrow::drefl::any`, it is similar to `std::any`, but can create by `type_info`(see [:microscope: unittest](./test/drefl/any.cpp))
-
-`mirrow::drefl::any` will copy the instance. If want only reference a exists instance, use `mirrow::drefl::reference_any`.
+*   `map`: `std::unordered_map`, `std::map`
+*   `set`: `std::unordered_set`, `std::set`
+*   `optional`: `std::optional`
+*   `smart points`: `std::unique_ptr`. `std::shared_ptr`
+*   `pair`: `std::pair`
 
 
 ### serd
@@ -228,32 +256,30 @@ deserialize(const toml::node& node, T& elem) {
 }
 ```
 
-for dynamic \[de\]serialize, you need regist your function into `serd_method_registry` at runtime:
+for dynamic \[de\]serialize, you need regist your function into `serialize_method_storage` at runtime:
 
 ```cpp
-mirrow::serd::drefl::serd_method_registry::instance().regist(type_info, serialize_fn, deserialize_fn);
+mirrow::serd::drefl::serialize_method_storage::instance().regist(type_info, serialize_fn, deserialize_fn);
 ```
-
-the first param `type_info` is your type info, can be accessed by `::mirrow::srefl::reflect<T>()` or by name `::mirrow::srefl::reflect(your_type_name)`
 
 the second and thrid param is your serialize/deserialize function, must be:
 
 ```cpp
 // serialize
-void serialize(toml::node&, std::string_view name, mirrow::drefl::any&)>;
+void serialize(toml::node&, const any&)>;
 // deserialize
-void deserialize(const toml::node&, mirrow::drefl::reference_any&)>;
+void deserialize(const toml::node&, any&)>;
 ```
 
 after these, you can use serialize/deserialize:
 
 ```cpp
 Person p;
-mirrow::drefl::reference_any any{p};
+mirrow::drefl::any any = mirrow::drefl::any_make_ref(p);
 
 // serialize to toml node
 auto tbl = ::mirrow::serd::drefl::serialize(any);
 
 // deserialize from toml node
-::mirrow::serd::drefl::deserialize(tbl, p);
+::mirrow::serd::drefl::deserialize(p, tbl);
 ```

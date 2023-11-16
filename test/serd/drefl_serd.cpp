@@ -1,8 +1,12 @@
+#include "mirrow/drefl/cast_any.hpp"
 #include "mirrow/serd/dynamic/backends/tomlplusplus.hpp"
+#include <toml++/impl/toml_formatter.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
+#include "mirrow/drefl/any.hpp"
+#include "mirrow/drefl/make_any.hpp"
 #include <array>
 #include <iostream>
 #include <sstream>
@@ -10,42 +14,42 @@
 class Person {
 public:
     Person() = default;
+
     Person(const std::string& name, float height, bool male)
         : name(name), height(height), male(male) {}
 
     std::string name;
     float height;
-    std::vector<Person> children;
     bool male;
-    
+    std::array<int, 5> ids{1, 2, 3, 4, 5};
+
     bool operator==(const Person& o) const {
-        return o.name == name && o.height == height && o.children == children && male == o.male;
+        return o.name == name && o.height == height && male == o.male;
     }
 };
 
-TEST_CASE("serialization") {
-    mirrow::drefl::factory<Person>("Person")
-        .ctor<const std::string&, float, bool>()
-        .ctor<>()
-        .var<&Person::name>("name")
-        .var<&Person::height>("height")
-        .var<&Person::male>("male")
-        .var<&Person::children>("children");
+TEST_CASE("serialization & deserialization") {
+    mirrow::drefl::class_factory<Person>::instance()
+        .regist("Person")
+        .property("name", &Person::name)
+        .property("height", &Person::height)
+        .property("male", &Person::male)
+        .property("ids", &Person::ids);
 
-    Person p("VisualGMQ", 123.0, true);
-    p.children.push_back(Person{"XiaoMing", 144, false});
-    p.children.push_back(Person{"XiaoWang", 127, true});
-    mirrow::drefl::any data{p};
-    auto tbl = mirrow::serd::drefl::serialize_class(data);
+    auto value = mirrow::drefl::any_make_copy(Person{"VisualGMQ", 123.0, true});
 
-    std::stringstream ss;
-    ss << toml::toml_formatter{tbl};
+    toml::table tbl = mirrow::serd::drefl::serialize(value, "Person");
 
-    toml::table deserd_tbl = toml::parse(ss.str()).table();
+    std::cout << toml::toml_formatter{tbl} << std::endl;
 
-    Person deserd_p{"", 0.0, false};
-    mirrow::drefl::reference_any deserd{p};
-    mirrow::serd::drefl::deserialize_class(deserd_tbl, deserd_p);
+    value = mirrow::drefl::any_make_copy(Person{"", 0.0, false});
+    mirrow::serd::drefl::deserialize(value, tbl);
 
-    REQUIRE(deserd_p == p);
+    Person* person = mirrow::drefl::try_cast<Person>(value);
+    REQUIRE(person);
+    REQUIRE(person->name == "VisualGMQ");
+    REQUIRE(person->height == 123.0);
+    REQUIRE(person->male == true);
+
+    REQUIRE(person->ids == std::array<int, 5>{1, 2, 3, 4, 5});
 }

@@ -6,7 +6,6 @@
 #include "toml++/toml.hpp"
 
 #include "mirrow/assert.hpp"
-#include "mirrow/serd/log.hpp"
 #include "mirrow/srefl/reflect.hpp"
 #include "mirrow/util/misc.hpp"
 

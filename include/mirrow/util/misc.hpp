@@ -1,15 +1,15 @@
 #pragma once
 
-#include <type_traits>
-#include <utility>
-#include <vector>
 #include <array>
 #include <map>
+#include <optional>
 #include <set>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <string>
-#include <optional>
+#include <utility>
+#include <vector>
 
 namespace mirrow {
 
@@ -19,22 +19,27 @@ template <typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
 namespace detail {
-    template <typename T>
-    struct remove_all_pointers {
-        using type = T;
-    };
+template <typename T, bool>
+struct remove_all_pointers;
 
-    template <typename T>
-    struct remove_all_pointers<T*> {
-        using type = typename remove_all_pointers<T>::type;
-    };
-}
+template <typename T>
+struct remove_all_pointers<T, false> {
+    using type = T;
+};
+
+template <typename T>
+struct remove_all_pointers<T, true> {
+    using type = typename remove_all_pointers<std::remove_pointer_t<T>,
+                                              std::is_pointer_v<T>>::type;
+};
+}  // namespace detail
 
 /**
  * @brief remove all pointers from type
  */
 template <typename T>
-using remove_all_pointers_t = typename detail::remove_all_pointers<T>::type;
+using remove_all_pointers_t =
+    typename detail::remove_all_pointers<T, true>::type;
 
 /**
  * @brief check whether a type has qualifier(const, volatile)
@@ -73,7 +78,6 @@ template <typename U>
 template <typename T>
 struct is_container : decltype(detail::is_container_test<T>(0)) {};
 
-
 template <typename T, typename = void>
 struct completely_strip_type {
     using type = T;
@@ -83,7 +87,6 @@ template <typename T>
 struct completely_strip_type<T, std::enable_if_t<is_complex_type_v<T>>> {
     using type = typename completely_strip_type<strip_type_t<T>>::type;
 };
-
 
 template <typename T>
 struct is_std_array {
@@ -112,6 +115,16 @@ struct is_vector {
 
 template <typename T>
 struct is_vector<std::vector<T>> {
+    static constexpr bool value = true;
+};
+
+template <typename T>
+struct is_std_list {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct is_std_list<std::list<T>> {
     static constexpr bool value = true;
 };
 
@@ -170,6 +183,26 @@ struct inner_type<T, std::void_t<typename T::value_type>> {
     using type = typename T::value_type;
 };
 
+template <typename T>
+struct pointer_layer {
+    constexpr static int value = 0;
+};
+
+template <typename T>
+struct pointer_layer<T*> {
+    constexpr static int value = 1 + pointer_layer<T>::value;
+};
+
+template <typename T>
+struct array_element_type {
+    using type = typename T::value_type;
+};
+
+template <typename T, size_t N>
+struct array_element_type<T[N]> {
+    using type = T;
+};
+
 }  // namespace detail
 
 /**
@@ -192,6 +225,9 @@ template <typename T>
 constexpr bool is_vector_v = detail::is_vector<T>::value;
 
 template <typename T>
+constexpr bool is_std_list_v = detail::is_std_list<T>::value;
+
+template <typename T>
 constexpr bool is_unordered_map_v = detail::is_unordered_map<T>::value;
 
 template <typename T>
@@ -209,11 +245,18 @@ constexpr bool is_string_v = detail::is_string<T>::value;
 template <typename T>
 constexpr bool is_optional_v = detail::is_optional<T>::value;
 
+template <typename T>
+using array_element_t = typename detail::array_element_type<T>::type;
+
 /**
  * @brief get container/std::optional inner type
  */
 template <typename T>
 using inner_type_t = typename detail::inner_type<T>::type;
+
+template <typename T>
+constexpr int pointer_layer_v =
+    detail::pointer_layer<util::remove_cvref_t<T>>::value;
 
 }  // namespace util
 
