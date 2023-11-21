@@ -1,3 +1,4 @@
+#define TOML_IMPLEMENTATION
 #include "mirrow/serd/static/backends/tomlplusplus.hpp"
 
 #define CATCH_CONFIG_MAIN

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "mirrow/drefl/any.hpp"
 #include "mirrow/drefl/factory.hpp"
 #include "mirrow/assert.hpp"

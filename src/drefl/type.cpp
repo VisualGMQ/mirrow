@@ -61,4 +61,32 @@ const array* type::as_array() const noexcept {
     return nullptr;
 }
 
+bool type::is_class() const noexcept {
+    return kind_ == value_kind::Class;
+}
+
+bool type::is_numeric() const noexcept {
+    return kind_ == value_kind::Numeric;
+}
+
+bool type::is_enum() const noexcept {
+    return kind_ == value_kind::Enum;
+}
+
+bool type::is_boolean() const noexcept {
+    return kind_ == value_kind::Boolean;
+}
+
+bool type::is_string() const noexcept {
+    return kind_ == value_kind::String;
+}
+
+bool type::is_pointer() const noexcept {
+    return kind_ == value_kind::Pointer;
+}
+
+bool type::is_array() const noexcept {
+    return kind_ == value_kind::Array;
+}
+
 }  // namespace mirrow::drefl

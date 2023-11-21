@@ -37,6 +37,14 @@ void string::set_value(any& a, std::string_view& value) const {
     }
 }
 
+std::string string::get_str(const any& value) const {
+    if (value.type_info()->as_string()->is_string_view()) {
+        return std::string(*(std::string_view*)(value.payload()));
+    } else {
+        return *(std::string*)(value.payload());
+    }
+}
+
 std::string_view string::get_str_view(const any& value) const {
     if (value.type_info()->as_string()->is_string_view()) {
         return *(std::string_view*)(value.payload());

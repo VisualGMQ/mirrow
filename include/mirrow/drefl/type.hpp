@@ -27,6 +27,14 @@ struct type {
     const pointer* as_pointer() const noexcept;
     const array* as_array() const noexcept;
 
+    bool is_class() const noexcept;
+    bool is_numeric() const noexcept;
+    bool is_enum() const noexcept;
+    bool is_boolean() const noexcept;
+    bool is_string() const noexcept;
+    bool is_pointer() const noexcept;
+    bool is_array() const noexcept;
+
     auto& name() const noexcept { return name_; }
 
 protected:

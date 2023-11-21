@@ -2,6 +2,10 @@
 #include "mirrow/drefl/class_visitor.hpp"
 #include "mirrow/drefl/factory.hpp"
 #include "mirrow/drefl/value_kind.hpp"
+
+#define TOML_IMPLEMENTATION
+#include "toml++/toml.hpp"
+
 #include <string_view>
 
 

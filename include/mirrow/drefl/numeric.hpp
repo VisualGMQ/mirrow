@@ -35,6 +35,14 @@ public:
     void set_value(any&, double value) const;
     double get_value(const any&) const;
 
+    bool is_integer() const {
+        return kind_ != Unknown && kind_ != Float && kind_ != Double;
+    }
+
+    bool is_floating_point() const {
+        return kind_ != Unknown && (kind_ == Float || kind_ == Double);
+    }
+
 private:
     enum numeric_kind kind_;
 

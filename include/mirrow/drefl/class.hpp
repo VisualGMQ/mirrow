@@ -1,11 +1,12 @@
 #pragma once
 
-#include "mirrow/drefl/type.hpp"
 #include "mirrow/drefl/qualifier.hpp"
+#include "mirrow/drefl/type.hpp"
 #include "mirrow/util/misc.hpp"
 #include <memory>
 #include <type_traits>
 #include <vector>
+
 
 namespace mirrow::drefl {
 
@@ -40,16 +41,27 @@ public:
     template <typename T>
     friend class class_factory;
 
-    explicit clazz(const std::string& name): type(value_kind::Class, name) {}
-    clazz(): type(value_kind::Class) {}
+    using default_construct_fn = any(void);
+
+    explicit clazz(const std::string& name, default_construct_fn dc)
+        : type(value_kind::Class, name), default_construct_(dc) {}
+
+    clazz() : type(value_kind::Class) {}
 
     auto& properties() const noexcept { return properties_; }
 
     void set_value(any& from, any& to);
     void steal_value(any& from, any& to);
 
+    bool is_default_constructbile() const noexcept {
+        return default_construct_ != nullptr;
+    }
+
+    any default_construct() const;
+
 private:
     std::vector<std::shared_ptr<property>> properties_;
+    default_construct_fn* default_construct_ = nullptr;
 };
 
-}
+}  // namespace mirrow::drefl

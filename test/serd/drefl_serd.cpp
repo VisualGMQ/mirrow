@@ -1,6 +1,7 @@
-#include "mirrow/drefl/cast_any.hpp"
+#define TOML_IMPLEMENTATION
 #include "mirrow/serd/dynamic/backends/tomlplusplus.hpp"
-#include <toml++/impl/toml_formatter.hpp>
+
+#include "mirrow/drefl/cast_any.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"

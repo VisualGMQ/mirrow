@@ -7,6 +7,7 @@
 #include "mirrow/drefl/enum.hpp"
 #include "mirrow/drefl/factory.hpp"
 #include "mirrow/drefl/numeric.hpp"
+#include "mirrow/drefl/operation_traits.hpp"
 #include "mirrow/drefl/pointer.hpp"
 #include "mirrow/drefl/raw_type.hpp"
 #include "mirrow/drefl/string.hpp"
@@ -15,7 +16,6 @@
 #include "mirrow/util/variable_traits.hpp"
 #include <memory>
 #include <type_traits>
-
 
 namespace mirrow::drefl {
 
@@ -28,13 +28,16 @@ constexpr bool is_array_v = std::is_array_v<T> || util::is_std_array_v<T> ||
 template <typename T>
 constexpr bool is_string_v =
     std::is_same_v<std::string, T> || std::is_same_v<std::string_view, T>;
-}
+}  // namespace internal
 
 class clazz;
 class class_visitor;
 
 template <typename>
 class class_factory;
+
+template <typename T>
+class enum_factory;
 
 class boolean_factory final {
 public:
@@ -396,10 +399,9 @@ public:
 
         static_assert(std::is_enum_v<enum_type>);
 
-        auto& enum_info = enum_factory<enum_type>::instance().info();
-
         property_ = std::make_shared<enum_property_impl<T>>(
-            name, get_qualifier<var_type>(), enum_info, accessor);
+            name, &class_factory<typename traits::clazz>::instance().info(),
+            get_qualifier<var_type>(), accessor);
     }
 
     auto& get() const noexcept { return property_; }
@@ -499,8 +501,6 @@ private:
     std::shared_ptr<array_property> property_;
 };
 
-
-
 class class_property_factory final {
 public:
     template <typename T>
@@ -547,6 +547,34 @@ public:
     }
 };
 
+class type_dict final {
+public:
+    static auto& instance() {
+        static type_dict inst;
+        return inst;
+    }
+
+    void add(const type* type) {
+        if (type && !type->name().empty()) {
+            type_map_.insert_or_assign(type->name(), type);
+        }
+    }
+
+    const type* find(std::string_view name) {
+        if (auto it = type_map_.find(name); it != type_map_.end())  {
+            return it->second;
+        }
+        return nullptr;
+    }
+
+    auto& typeinfos() const noexcept { return type_map_; }
+
+private:
+    std::unordered_map<std::string_view, const type*> type_map_;
+
+    type_dict() = default;
+};
+
 template <typename T>
 class enum_factory final {
 public:
@@ -557,11 +585,24 @@ public:
 
     static enum_factory& instance() noexcept {
         static enum_factory inst;
+
+        static bool inited = false;
+        if (!inited) {
+            inited = true;
+            type_dict::instance().add(&inst.enum_info_);
+        }
+
         return inst;
     }
 
     auto& regist(const std::string& name) noexcept {
         enum_info_.name_ = name;
+
+        if (!type_dict::instance().find(name)) {
+            type_dict::instance().add(&enum_info_);
+        } else {
+            MIRROW_LOG("type " + name + "already registered");
+        }
 
         return *this;
     }
@@ -591,6 +632,13 @@ class numeric_factory final {
 public:
     static auto& instance() noexcept {
         static numeric_factory inst{numeric::create<T>()};
+
+        static bool inited = false;
+        if (!inited) {
+            inited = true;
+            type_dict::instance().add(&inst.info_);
+        }
+
         return inst;
     }
 
@@ -607,6 +655,13 @@ class string_factory final {
 public:
     static auto& instance() noexcept {
         static string_factory inst{string::create<T>()};
+
+        static bool inited = false;
+        if (!inited) {
+            inited = true;
+            type_dict::instance().add(&inst.info_);
+        }
+
         return inst;
     }
 
@@ -676,11 +731,27 @@ class class_factory final {
 public:
     static auto& instance() noexcept {
         static class_factory inst;
+
+        static bool inited = false;
+        if (!inited) {
+            inited = true;
+            if constexpr (std::is_default_constructible_v<T>) {
+                inst.info_.default_construct_ = default_construct;
+            }
+            type_dict::instance().add(&inst.info_);
+        }
+
         return inst;
     }
 
     auto& regist(const std::string& name) {
         info_.name_ = name;
+
+        if (!type_dict::instance().find(name)) {
+            type_dict::instance().add(&info_);
+        } else {
+            MIRROW_LOG("type " + name + "already registered");
+        }
 
         return *this;
     }
@@ -700,6 +771,43 @@ public:
 
 private:
     clazz info_;
+
+    class_factory() = default;
+
+    static any default_construct() {
+        if constexpr (std::is_default_constructible_v<T>) {
+            T value{};
+            return any{any::access_type::Copy, (void*)&value,
+                    &type_operation_traits<T>::get_operations(),
+                    &class_factory<T>::instance().info()};
+        } else {
+            return {};
+        }
+    }
+};
+
+template <typename T>
+class registrar final {
+public:
+    registrar() = delete;
+
+    static auto& instance() {
+        if constexpr (std::is_pointer_v<T>) {
+            return pointer_factory<T>::instance();
+        } else if constexpr (std::is_same_v<bool, T>) {
+            return boolean_factory::instance();
+        } else if constexpr (internal::is_string_v<T>) {
+            return string_factory<T>::instance();
+        } else if constexpr (std::is_enum_v<T>) {
+            return enum_factory<T>::instance();
+        } else if constexpr (internal::is_array_v<T>) {
+            return array_factory<T>::instance();
+        } else if constexpr (std::is_fundamental_v<T>) {
+            return numeric_factory<T>::instance();
+        } else {
+            return class_factory<T>::instance();
+        }
+    }
 };
 
 template <typename T>
@@ -713,9 +821,23 @@ const type* typeinfo() {
     return t;
 }
 
+inline const type* typeinfo(std::string_view name) {
+    return type_dict::instance().find(name);
+}
+
+inline auto& all_typeinfo() {
+    return type_dict::instance().typeinfos();
+}
+
 template <typename T>
 auto& pointer_factory<T>::instance() noexcept {
     static pointer_factory inst{pointer::create<T>(typeinfo<raw_type_t<T>>())};
+
+    static bool inited = false;
+    if (!inited) {
+        inited = true;
+        type_dict::instance().add(&inst.info_);
+    }
     return inst;
 }
 
@@ -737,6 +859,12 @@ template <typename T>
 auto& array_factory<T>::instance() noexcept {
     static array_factory inst{
         array::create<T>(typeinfo<util::array_element_t<T>>())};
+
+    static bool inited = false;
+    if (!inited) {
+        inited = true;
+        type_dict::instance().add(&inst.info_);
+    }
     return inst;
 }
 

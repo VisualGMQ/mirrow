@@ -4,6 +4,9 @@
 #include "mirrow/drefl/value_kind.hpp"
 #include "mirrow/serd/dynamic/backends/tomlplusplus.hpp"
 
+#define TOML_IMPLEMENTATION
+#include "toml++/toml.hpp"
+
 namespace mirrow::serd::drefl {
 
 void deserialize_numeric(any& obj, const toml::node& node) {

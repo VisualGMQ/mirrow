@@ -1,8 +1,7 @@
 #pragma once
 
-#ifndef TOML_EXCEPTIONS
 #define TOML_EXCEPTIONS 0
-#endif
+#define TOML_HEADER_ONLY 0
 #include "toml++/toml.hpp"
 
 #include "mirrow/drefl/any.hpp"

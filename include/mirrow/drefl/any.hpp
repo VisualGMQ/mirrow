@@ -72,6 +72,22 @@ public:
         return {access_type::Copy, elem, operations_, type_};
     }
 
+    void copy_assign(any& o) {
+        if (o.type_info() == type_info()) {
+            operations_->copy_assignment(payload_, o.payload_);
+        } else {
+            MIRROW_LOG("can't copy assign between two different types");
+        }
+    }
+
+    void steal_assign(any&& o) {
+        if (o.type_info() == type_info()) {
+            operations_->steal_assignment(payload_, o.payload_);
+        } else {
+            MIRROW_LOG("can't copy assign between two different types");
+        }
+    }
+
     any steal() {
         auto access = access_;
         auto payload = operations_->steal_construct(payload_);
