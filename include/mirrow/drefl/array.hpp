@@ -9,7 +9,7 @@
 
 namespace mirrow::drefl {
 
-class type_operations;
+struct type_operations;
 
 class array : public type {
 public:

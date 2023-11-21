@@ -27,8 +27,8 @@ public:
 
     auto numeric_kind() const noexcept { return kind_; }
 
-    numeric(value_kind value_kind, enum numeric_kind numeric_kind, const std::string& name)
-        : type(value_kind, name), kind_(numeric_kind) {}
+    numeric(value_kind value_kind, enum numeric_kind numeric_kind,
+            const std::string& name);
 
     void set_value(any&, long value) const;
     void set_value(any&, uint64_t value) const;
@@ -43,8 +43,15 @@ public:
         return kind_ != Unknown && (kind_ == Float || kind_ == Double);
     }
 
+    any default_construct() const {
+        return default_construct_(kind_);
+    }
+
 private:
     enum numeric_kind kind_;
+
+    using default_ctor = any(enum numeric_kind);
+    default_ctor* default_construct_;
 
     template <typename T>
     static numeric create() { return {get_kind_from_type<T>(), get_kind<T>(), get_name<T>()};}

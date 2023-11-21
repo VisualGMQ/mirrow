@@ -28,6 +28,9 @@ long serialize_enum(const any& value) {
     return value.type_info()->as_enum()->get_value(value);
 }
 
+void serialize_optional(const any& value, std::string_view name,
+                        toml::node& node);
+
 toml::table serialize_class(const any& value);
 toml::array serialize_array(const any& value);
 
@@ -64,6 +67,13 @@ public:
         tbl_.emplace(prop.name(), serialize_array(prop.call_const(value_)));
     }
 
+    void operator()(optional_property& prop) {
+        auto value = prop.call_const(value_);
+        if (value.type_info()->as_optional()->has_value(value)) {
+            serialize_optional(value, prop.name(), tbl_);
+        }
+    }
+
 private:
     toml::table& tbl_;
     const any& value_;
@@ -80,7 +90,6 @@ toml::table serialize_class(const any& value) {
 
     return tbl;
 }
-
 
 toml::array serialize_array(const any& value) {
     // IMPROVE: use iterator to improve effect when value is std::list
@@ -112,6 +121,9 @@ toml::array serialize_array(const any& value) {
             case drefl::value_kind::Class:
                 arr.push_back(serialize_class(elem));
                 break;
+            case drefl::value_kind::Optional:
+                serialize_optional(elem, "", arr);
+                break;
             case drefl::value_kind::Property:
             case drefl::value_kind::Pointer:
                 MIRROW_LOG("can't serialize raw property/pointer");
@@ -120,11 +132,11 @@ toml::array serialize_array(const any& value) {
     }
 
     return arr;
-
 }
 
 void do_serialize(const any& value, toml::table& tbl, std::string_view name) {
-    auto serialize_method = serialize_method_storage::instance().get_serialize(value.type_info());
+    auto serialize_method =
+        serialize_method_storage::instance().get_serialize(value.type_info());
     if (serialize_method) {
         serialize_method(tbl, value);
         return;
@@ -152,6 +164,9 @@ void do_serialize(const any& value, toml::table& tbl, std::string_view name) {
         case drefl::value_kind::Array:
             tbl.emplace(name, serialize_array(value));
             break;
+        case drefl::value_kind::Optional:
+            serialize_optional(value, name, tbl);
+            break;
         case drefl::value_kind::Property:
             MIRROW_LOG("can't serialize property directly");
             break;
@@ -161,18 +176,58 @@ void do_serialize(const any& value, toml::table& tbl, std::string_view name) {
     }
 }
 
-toml::table serialize(const any& value, std::string_view name) {
+void serialize(toml::table& tbl, const any& value, std::string_view name) {
     auto type = value.type_info();
     if (type->kind() == value_kind::Pointer ||
         type->kind() == value_kind::Property) {
         MIRROW_LOG(
             "How can I serialize a pointer or property? I can't do this!");
-        return {};
     }
 
-    toml::table tbl;
     do_serialize(value, tbl, name);
-    return tbl;
 }
+
+void serialize_optional(const any& value, std::string_view name, toml::node& node) {
+    auto optional_type = value.type_info()->as_optional();
+
+    if (optional_type->has_value(value)) {
+        return;
+    }
+    if (node.is_table()) {
+        serialize(*node.as_table(), optional_type->get_value_const(value), name);
+    } else if (node.is_array()) {
+        auto elem = optional_type->get_value_const(value);
+        auto arr = *node.as_array();
+        switch (elem.type_info()->kind()) {
+            case drefl::value_kind::None:
+                MIRROW_LOG("can't serialize unknown value");
+                break;
+            case drefl::value_kind::Boolean:
+                arr.push_back(serialize_boolean(elem));
+                break;
+            case drefl::value_kind::Numeric:
+                arr.push_back(serialize_numeric(elem));
+                break;
+            case drefl::value_kind::String:
+                arr.push_back(serialize_string(elem));
+                break;
+            case drefl::value_kind::Enum:
+                arr.push_back(serialize_enum(elem));
+                break;
+            case drefl::value_kind::Class:
+                arr.push_back(serialize_class(elem));
+                break;
+            case drefl::value_kind::Array:
+                arr.push_back(serialize_array(elem));
+                break;
+            case drefl::value_kind::Property:
+            case drefl::value_kind::Pointer:
+            case drefl::value_kind::Optional:
+                MIRROW_LOG("can't serialize property/pointer/optional<optional<>>");
+                break;
+        }
+    }
+}
+
 
 }  // namespace mirrow::serd::drefl

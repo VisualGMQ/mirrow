@@ -65,7 +65,7 @@ private:
     std::unordered_map<const type*, serd_methods> methods_;
 };
 
-toml::table serialize(const any& value, std::string_view name);
+void serialize(toml::table& tbl, const any& value, std::string_view name);
 void deserialize(any& obj, const toml::node& node);
 
 }  // namespace mirrow::serd::drefl

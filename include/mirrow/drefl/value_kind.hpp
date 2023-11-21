@@ -17,6 +17,7 @@ enum class value_kind {
     Property,
     Pointer,
     Array,
+    Optional,
 };
 
 template <typename T>
@@ -24,6 +25,9 @@ value_kind get_kind_from_type() {
     if constexpr (util::is_std_array_v<T> || util::is_vector_v<T> ||
                   std::is_array_v<T>) {
         return value_kind::Array;
+    }
+    if constexpr (util::is_optional_v<T>) {
+        return value_kind::Optional;
     }
     if constexpr (std::is_pointer_v<T>) {
         return value_kind::Pointer;

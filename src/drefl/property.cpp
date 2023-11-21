@@ -31,4 +31,8 @@ void array_property::visit(class_visitor* visitor) {
     (*visitor)(*this);
 }
 
+void optional_property::visit(class_visitor* visitor) {
+    (*visitor)(*this);
+}
+
 }  // namespace mirrow::drefl

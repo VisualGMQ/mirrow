@@ -15,6 +15,7 @@ public:
     virtual void operator()(boolean_property&) = 0;
     virtual void operator()(pointer_property&) = 0;
     virtual void operator()(array_property&) = 0;
+    virtual void operator()(optional_property&) = 0;
 };
 
 }  // namespace mirrow::drefl

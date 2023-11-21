@@ -11,6 +11,7 @@
 #include "mirrow/drefl/pointer.hpp"
 #include "mirrow/drefl/raw_type.hpp"
 #include "mirrow/drefl/string.hpp"
+#include "mirrow/drefl/optional.hpp"
 #include "mirrow/util/function_traits.hpp"
 #include "mirrow/util/misc.hpp"
 #include "mirrow/util/variable_traits.hpp"
@@ -148,6 +149,15 @@ class array_property : public property {
 public:
     explicit array_property(const std::string& name, const clazz* owner,
                             qualifier q)
+        : property(name, owner, q) {}
+
+    void visit(class_visitor* visitor) override;
+};
+
+class optional_property : public property {
+public:
+    explicit optional_property(const std::string& name, const clazz* owner,
+                                qualifier q)
         : property(name, owner, q) {}
 
     void visit(class_visitor* visitor) override;
@@ -389,6 +399,35 @@ private:
     const class array* type_info_ = nullptr;
 };
 
+template <typename T>
+class optional_property_impl : public optional_property {
+public:
+    optional_property_impl(const std::string& name, const clazz* owner,
+                        qualifier q, T pointer)
+        : optional_property{name, owner, q},
+          pointer_(pointer),
+          type_info_(&optional_factory<util::remove_cvref_t<
+                          typename util::variable_traits<T>::type>>::instance()
+                          .info()) {}
+
+    const struct type* type_info() const noexcept override {
+        return type_info_;
+    }
+
+    any call_const(const any& a) const override {
+        return call_property_const(a, pointer_, this->owner());
+    }
+
+    any call(any& a) const override {
+        return call_property(a, pointer_, this->owner());
+    }
+
+private:
+    T pointer_ = nullptr;
+    const class optional* type_info_ = nullptr;
+};
+
+
 class enum_property_factory final {
 public:
     template <typename T>
@@ -501,6 +540,24 @@ private:
     std::shared_ptr<array_property> property_;
 };
 
+class optional_property_factory final {
+public:
+    template <typename T>
+    optional_property_factory(const std::string& name, T accessor) {
+        using traits = util::variable_traits<T>;
+        using var_type = typename traits::type;
+
+        property_ = std::make_shared<optional_property_impl<T>>(
+            name, &class_factory<typename traits::clazz>::instance().info(),
+            get_qualifier<var_type>(), accessor);
+    }
+
+    auto& get() const noexcept { return property_; }
+
+private:
+    std::shared_ptr<optional_property> property_;
+};
+
 class class_property_factory final {
 public:
     template <typename T>
@@ -530,6 +587,8 @@ public:
 
             if constexpr (std::is_pointer_v<type>) {
                 return pointer_property_factory{name, accessor}.get();
+            } else if constexpr (util::is_optional_v<type>) {
+                return optional_property_factory{name, accessor}.get();
             } else if constexpr (std::is_same_v<bool, type>) {
                 return boolean_property_factory{name, accessor}.get();
             } else if constexpr (std::is_enum_v<type>) {
@@ -700,11 +759,26 @@ private:
 };
 
 template <typename T>
+class optional_factory final {
+public:
+    static auto& instance() noexcept;
+    auto& info() const noexcept { return info_; }
+
+private:
+    optional_factory(const optional& a): info_{a} {}
+
+    optional info_;
+};
+
+template <typename T>
 class factory final {
 public:
     static const type* info() noexcept {
         if constexpr (std::is_pointer_v<T>) {
             return &pointer_factory<T>::instance().info();
+        }
+        if constexpr (util::is_optional_v<T>) {
+            return &optional_factory<T>::instance().info();
         }
         if constexpr (std::is_same_v<bool, T>) {
             return &boolean_factory::instance().info();
@@ -794,6 +868,8 @@ public:
     static auto& instance() {
         if constexpr (std::is_pointer_v<T>) {
             return pointer_factory<T>::instance();
+        } else if constexpr (util::is_optional_v<T>) {
+            return optional_factory<T>::instance();
         } else if constexpr (std::is_same_v<bool, T>) {
             return boolean_factory::instance();
         } else if constexpr (internal::is_string_v<T>) {
@@ -865,6 +941,20 @@ auto& array_factory<T>::instance() noexcept {
         inited = true;
         type_dict::instance().add(&inst.info_);
     }
+    return inst;
+}
+
+template <typename T>
+auto& optional_factory<T>::instance() noexcept {
+    static optional_factory inst{
+        optional::create<T>(factory<typename T::value_type>::info())};
+
+    static bool inited = false;
+    if (!inited) {
+        inited = true;
+        type_dict::instance().add(&inst.info_);
+    }
+
     return inst;
 }
 

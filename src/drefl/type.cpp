@@ -6,6 +6,7 @@
 #include "mirrow/drefl/numeric.hpp"
 #include "mirrow/drefl/pointer.hpp"
 #include "mirrow/drefl/string.hpp"
+#include "mirrow/drefl/optional.hpp"
 #include "mirrow/drefl/value_kind.hpp"
 
 namespace mirrow::drefl {
@@ -61,6 +62,13 @@ const array* type::as_array() const noexcept {
     return nullptr;
 }
 
+const optional* type::as_optional() const noexcept {
+    if (kind() == value_kind::Optional) {
+        return static_cast<const optional*>(this);
+    }
+    return nullptr;
+}
+
 bool type::is_class() const noexcept {
     return kind_ == value_kind::Class;
 }
@@ -87,6 +95,10 @@ bool type::is_pointer() const noexcept {
 
 bool type::is_array() const noexcept {
     return kind_ == value_kind::Array;
+}
+
+bool type::is_optional() const noexcept {
+    return kind_ == value_kind::Optional;
 }
 
 }  // namespace mirrow::drefl
