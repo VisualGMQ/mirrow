@@ -37,8 +37,23 @@ class class_visitor;
 template <typename>
 class class_factory;
 
-template <typename T>
+template <typename>
 class enum_factory;
+
+template <typename>
+class factory;
+
+template <typename>
+class string_factory;
+
+template <typename>
+class numeric_factory;
+
+template <typename>
+class array_factory;
+
+template <typename>
+class optional_factory;
 
 class boolean_factory final {
 public:
@@ -947,7 +962,7 @@ auto& array_factory<T>::instance() noexcept {
 template <typename T>
 auto& optional_factory<T>::instance() noexcept {
     static optional_factory inst{
-        optional::create<T>(factory<typename T::value_type>::info())};
+        optional::create<T>(typeinfo<typename T::value_type>())};
 
     static bool inited = false;
     if (!inited) {

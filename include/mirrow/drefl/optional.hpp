@@ -22,18 +22,18 @@ public:
 
     template <typename T>
     struct traits {
-        using type = std::optional<T>;
+        using value_type = typename T::value_type;
 
         static void set_value(const void* src, void* dst) {
-            *(type*)(dst) = *(T*)src;
+            *(T*)(dst) = *(value_type*)src;
         }
 
         static void* get_value(void* value) {
-            return &((type*)value)->value();
+            return &((T*)value)->value();
         }
 
         static bool has_value(const void* value) {
-            return ((const type*)(value))->has_value();
+            return ((const T*)(value))->has_value();
         }
 
         static const operations& get_operations() {

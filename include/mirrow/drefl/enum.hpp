@@ -25,7 +25,7 @@ public:
 
     long value() const noexcept { return value_; }
 
-    const enum_info* enum_info() const noexcept { return enum_info_; }
+    const class enum_info* enum_info() const noexcept { return enum_info_; }
 
 private:
     const class enum_info* enum_info_;

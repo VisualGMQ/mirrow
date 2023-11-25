@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <optional>
 
 namespace mirrow {
 
@@ -137,6 +138,46 @@ constexpr bool has_serialize_method_v = impl::has_serialize_method<T>::value;
 
 // some SFINEA function to serialize specific type
 
+// fwd declare
+
+/*
+template <typename T>
+std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<bool, T>>
+serialize(const T& value, serialize_destination_type_t<T>& node);
+
+template <typename T>
+std::enable_if_t<std::is_floating_point_v<T>> serialize(
+    const T& value, serialize_destination_type_t<T>& node);
+
+template <typename T>
+std::enable_if_t<std::is_same_v<bool, T>> serialize(
+    const T& value, serialize_destination_type_t<T>& node);
+
+template <typename T>
+std::enable_if_t<std::is_same_v<std::string, T>> serialize(
+    const T& value, serialize_destination_type_t<T>& node);
+
+template <typename T>
+std::enable_if_t<util::is_optional_v<T>> serialize(
+    const T& value, serialize_destination_type_t<T>& node);
+
+template <typename T>
+std::enable_if_t<util::is_unordered_map_v<T>> serialize(
+    const T& map, serialize_destination_type_t<T>& tbl);
+
+template <typename T>
+std::enable_if_t<util::is_unordered_set_v<T>> serialize(
+    const T& map, serialize_destination_type_t<T>& arr);
+
+template <typename T>
+std::enable_if_t<util::is_vector_v<T>> serialize(
+    const T& elems, serialize_destination_type_t<T>& arr);
+
+template <typename T>
+std::enable_if_t<util::is_std_array_v<T>> serialize(
+    const T& elems, serialize_destination_type_t<T>& arr);
+*/
+
 
 /**
  * @brief serialize a data(the data must be reflected by static reflection)
@@ -159,29 +200,7 @@ template <typename T>
 std::enable_if_t<!has_serialize_method_v<T>>
 serialize(
     const T& value,
-    serialize_destination_type_t<T>& tbl) {
-    using type = util::remove_cvref_t<T>;
-
-    ::mirrow::srefl::reflect_info<type> info = ::mirrow::srefl::reflect<type>();
-    info.visit_member_variables([&tbl, &value](auto&& field) {
-        auto& member = field.invoke(&value);
-
-        if constexpr (util::is_optional_v<
-                          util::remove_cvref_t<decltype(member)>>) {
-            if (!member.has_value()) {
-                return;
-            }
-
-            serialize_destination_type_t<typename util::remove_cvref_t<decltype(member.value())>> node;
-            serialize(member, node);
-            tbl.emplace(field.name(), node);
-        } else {
-            serialize_destination_type_t<util::remove_cvref_t<decltype(member)>> node;
-            serialize(member, node);
-            tbl.emplace(field.name(), node);
-        }
-    });
-}
+    serialize_destination_type_t<T>& tbl);
 
 template <typename T>
 std::enable_if_t<std::is_integral_v<T> && !std::is_same_v<bool, T>>
@@ -273,8 +292,43 @@ std::enable_if_t<util::is_std_array_v<T>> serialize(
     }
 }
 
+template <typename T>
+std::enable_if_t<!has_serialize_method_v<T>>
+serialize(
+    const T& value,
+    serialize_destination_type_t<T>& tbl) {
+    using type = util::remove_cvref_t<T>;
+
+    ::mirrow::srefl::reflect_info<type> info = ::mirrow::srefl::reflect<type>();
+    info.visit_member_variables([&tbl, &value](auto&& field) {
+        auto& member = field.invoke(&value);
+
+        if constexpr (util::is_optional_v<
+                          util::remove_cvref_t<decltype(member)>>) {
+            if (!member.has_value()) {
+                return;
+            }
+
+            serialize_destination_type_t<typename util::remove_cvref_t<decltype(member.value())>> node;
+            serialize(member, node);
+            tbl.emplace(field.name(), node);
+        } else {
+            serialize_destination_type_t<util::remove_cvref_t<decltype(member)>> node;
+            serialize(member, node);
+            tbl.emplace(field.name(), node);
+        }
+    });
+}
+
+
 
 /******************************deserialize********************************************/
+
+// fwd declare
+
+template <typename T>
+std::enable_if_t<!has_serialize_method_v<T>> deserialize(
+    const toml::node& node, T& instance);
 
 // functions for deserialize specific type
 

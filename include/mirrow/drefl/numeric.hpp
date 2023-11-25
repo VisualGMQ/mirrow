@@ -3,6 +3,7 @@
 #include "mirrow/drefl/type.hpp"
 #include "mirrow/drefl/value_kind.hpp"
 #include "mirrow/drefl/any.hpp"
+#include <cstdint>
 
 namespace mirrow::drefl {
 

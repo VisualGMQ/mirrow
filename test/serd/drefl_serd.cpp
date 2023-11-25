@@ -27,7 +27,7 @@ public:
 
     bool operator==(const Person& o) const {
         return o.name == name && o.height == height && male == o.male &&
-               ids == o.ids, opt == o.opt;
+               ids == o.ids && opt == o.opt;
     }
 };
 
