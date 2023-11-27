@@ -16,7 +16,7 @@ void boolean::set_value(any& dst, bool value) const {
 }
 
 bool boolean::get_value(const any& value) const {
-    return try_cast_const<bool>(value);
+    return *try_cast_const<bool>(value);
 }
 
 }
