@@ -2,6 +2,8 @@
 
 #include "mirrow/drefl/value_kind.hpp"
 #include "mirrow/drefl/any.hpp"
+#include "mirrow/drefl/config.hpp"
+#include <algorithm>
 
 namespace mirrow::drefl {
 
@@ -19,6 +21,16 @@ struct type {
         : kind_(kind), name_(name) {}
     explicit type(value_kind kind): kind_(kind) {}
     virtual ~type() = default;
+
+    auto& attributes() const { return attrs_; }
+    void set_attr(const std::vector<attribute_t>& attrs) { attrs_ = attrs; }
+    void set_attr(std::vector<attribute_t>&& attrs) { attrs_ = std::move(attrs);
+    }
+
+    bool find_attr(attribute_t attr) const {
+        return std::find(attrs_.begin(), attrs_.end(), attr) !=
+               std::end(attrs_);
+    }
 
     auto kind() const noexcept { return kind_; }
 
@@ -47,15 +59,15 @@ protected:
 
 private:
     value_kind kind_;
+    std::vector<attribute_t> attrs_;
 };
 
-#define SET_VALUE_CHECK(a, type)                     \
+#define SET_VALUE_CHECK(a, type)                    \
     ((a.access_type() == any::access_type::Ref ||   \
       a.access_type() == any::access_type::Copy) && \
      a.type_info()->kind() == type)
 
-#define COPY_VALUE_CHECK(a, type)                       \
-    (a.access_type() != any::access_type::Null && \
-     a.type_info()->kind() == type)
+#define COPY_VALUE_CHECK(a, type) \
+    (a.access_type() != any::access_type::Null && a.type_info()->kind() == type)
 
 }  // namespace mirrow::drefl

@@ -30,7 +30,6 @@ public:
         : type(value_kind::Property, name), owner_(owner), qualifier_(q) {}
 
     virtual void visit(class_visitor*) = 0;
-    // virtual any call(const any&) = 0;
 
     virtual ~property() = default;
 

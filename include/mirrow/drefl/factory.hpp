@@ -15,6 +15,7 @@
 #include "mirrow/util/function_traits.hpp"
 #include "mirrow/util/misc.hpp"
 #include "mirrow/util/variable_traits.hpp"
+#include "mirrow/drefl/config.hpp"
 #include <memory>
 #include <type_traits>
 
@@ -833,8 +834,10 @@ public:
         return inst;
     }
 
-    auto& regist(const std::string& name) {
+    auto& regist(const std::string& name,
+                 std::vector<attribute_t>&& attrs = {}) {
         info_.name_ = name;
+        info_.set_attr(std::move(attrs));
 
         if (!type_dict::instance().find(name)) {
             type_dict::instance().add(&info_);
@@ -846,12 +849,13 @@ public:
     }
 
     template <typename U>
-    auto& property(const std::string& name, U accessor) {
+    auto& property(const std::string& name, U accessor, std::vector<attribute_t>&& attrs = {}) {
         using traits = util::variable_traits<U>;
         using type = typename traits::type;
 
         info_.properties_.emplace_back(
             property_factory{}.create(name, accessor));
+        info_.properties_.back()->set_attr(std::move(attrs));
 
         return *this;
     }
