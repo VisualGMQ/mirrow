@@ -1,13 +1,13 @@
 # Mirrow - A Template Meta Programming utility framework
 
-`mirrow` is  a TMP(template meta programming) utility framework in C++17. It aimed to make some utility to help programmer do TMP easier.
+`mirrow` is  a TMP(template meta programming) utility framework in C++17. It aimed to make some utility to help programmer do TMP easier. Referenced [meta](https://github.com/skypjack/meta) and [ponder](https://github.com/billyquith/ponder).
 
 Nowadays, `mirrow` has these parts:
 
 * `util`: some common utilities
 * `srefl`: static reflection framework
 * `drefl`: dynamic reflection framework
-* `serd`: a serialize framework based on reflection(serial with `drefl`&`srefl`)
+* `serd`: a serialize framework based on reflection(serial with `drefl`&`srefl`) with TOML
 
 ## :book: docs
 
