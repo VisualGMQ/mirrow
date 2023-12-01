@@ -72,7 +72,7 @@ struct type_operation_traits {
     }
 
     static void steal_assignment(void* dst, void* src) {
-        if constexpr (std::is_copy_assignable_v<T>) {
+        if constexpr (std::is_move_assignable_v<T>) {
             *(T*)(dst) = std::move(*(T*)(src));
         } else {
             MIRROW_LOG("type don't support copy assignment");
