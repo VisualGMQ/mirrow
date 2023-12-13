@@ -44,7 +44,7 @@ public:
     }
 
     void operator()(enum_property& prop) {
-        tbl_.emplace(prop.name(), serialize_numeric(prop.call_const(value_)));
+        tbl_.emplace(prop.name(), serialize_enum(prop.call_const(value_)));
     }
 
     void operator()(clazz_property& prop) {
