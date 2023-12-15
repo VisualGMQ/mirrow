@@ -304,7 +304,7 @@ void do_deserialize(any& obj, const toml::node& node) {
             break;
         case drefl::value_kind::Class:
             deserialize_class(obj,
-                              *node.as_table()->get(obj.type_info()->name()));
+                              *node.as_table());
             break;
         case drefl::value_kind::Array:
             deserialize_array(obj, node);
