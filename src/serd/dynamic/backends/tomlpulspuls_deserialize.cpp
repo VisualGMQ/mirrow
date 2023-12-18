@@ -172,8 +172,7 @@ public:
                         elem = any_make_constref(node.as_integer()->get());
                         break;
                     case drefl::value_kind::Class:
-                        elem =
-                            elem.type_info()->as_class()->default_construct();
+                        elem = elem_type->as_class()->default_construct();
                         deserialize_class(elem, node);
                         break;
                     case drefl::value_kind::Array:
