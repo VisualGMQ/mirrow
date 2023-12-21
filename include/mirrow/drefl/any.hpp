@@ -127,6 +127,16 @@ public:
     void* payload() noexcept { return payload_; }
     const void* payload() const noexcept { return payload_; }
 
+    /**
+     * @brief release payload
+     */
+    void* release() {
+        auto payload = payload_;
+        payload_ = nullptr;
+        access_ = access_type::Null;
+        return payload;
+    }
+
 private:
     enum access_type access_ = access_type::Null;
     void* payload_ = nullptr;

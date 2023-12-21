@@ -869,8 +869,7 @@ private:
 
     static any default_construct() {
         if constexpr (std::is_default_constructible_v<T>) {
-            T value{};
-            return any{any::access_type::Copy, (void*)&value,
+            return any{any::access_type::Copy, new T{},
                     &type_operation_traits<T>::get_operations(),
                     &class_factory<T>::instance().info()};
         } else {

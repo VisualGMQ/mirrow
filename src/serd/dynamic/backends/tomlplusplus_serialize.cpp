@@ -82,6 +82,13 @@ private:
 toml::table serialize_class(const any& value) {
     toml::table tbl;
 
+    if (auto f = serialize_method_storage::instance().get_serialize(
+            value.type_info());
+        f) {
+        f(tbl, value);
+        return tbl;
+    }
+
     auto& clazz = *value.type_info()->as_class();
     serialize_class_visitor visitor{tbl, value};
     for (auto& prop : clazz.properties()) {
@@ -187,14 +194,16 @@ void serialize(toml::table& tbl, const any& value, std::string_view name) {
     do_serialize(value, tbl, name);
 }
 
-void serialize_optional(const any& value, std::string_view name, toml::node& node) {
+void serialize_optional(const any& value, std::string_view name,
+                        toml::node& node) {
     auto optional_type = value.type_info()->as_optional();
 
     if (optional_type->has_value(value)) {
         return;
     }
     if (node.is_table()) {
-        serialize(*node.as_table(), optional_type->get_value_const(value), name);
+        serialize(*node.as_table(), optional_type->get_value_const(value),
+                  name);
     } else if (node.is_array()) {
         auto elem = optional_type->get_value_const(value);
         auto arr = *node.as_array();
@@ -223,11 +232,11 @@ void serialize_optional(const any& value, std::string_view name, toml::node& nod
             case drefl::value_kind::Property:
             case drefl::value_kind::Pointer:
             case drefl::value_kind::Optional:
-                MIRROW_LOG("can't serialize property/pointer/optional<optional<>>");
+                MIRROW_LOG(
+                    "can't serialize property/pointer/optional<optional<>>");
                 break;
         }
     }
 }
-
 
 }  // namespace mirrow::serd::drefl
