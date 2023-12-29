@@ -40,10 +40,10 @@ public:
 
     using enum_numeric_type = typename enum_item::enum_numeric_type;
 
-    enum_info() : type(value_kind::Enum) {}
+    explicit enum_info() : type(value_kind::Enum, nullptr) {}
 
-    explicit enum_info(const std::string& name)
-        : type(value_kind::Enum, name) {}
+    explicit enum_info(const std::string& name, default_construct_fn fn)
+        : type(value_kind::Enum, name, fn) {}
 
     long get_value(const any& elem) const { return *(long*)(elem.payload()); }
 

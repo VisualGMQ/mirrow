@@ -37,8 +37,10 @@ any default_create(enum numeric::numeric_kind kind) {
     return {};
 }
 
-numeric::numeric(value_kind value_kind, enum numeric_kind numeric_kind, const std::string& name)
-        : type(value_kind, name), kind_(numeric_kind), default_construct_(default_create) {}
+numeric::numeric(value_kind value_kind, enum numeric_kind numeric_kind,
+                 const std::string& name)
+    : type(value_kind, name, [=]() { return default_create(numeric_kind); }),
+      kind_(numeric_kind) {}
 
 template <typename T>
 void do_set_value(any& a, T value) {

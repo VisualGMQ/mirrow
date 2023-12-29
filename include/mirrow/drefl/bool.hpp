@@ -8,7 +8,7 @@ class any;
 
 class boolean final: public type {
 public:
-    boolean(): type(value_kind::Boolean, "bool") {}
+    boolean();
 
     void set_value(any&, bool) const;
     bool get_value(const any&) const;

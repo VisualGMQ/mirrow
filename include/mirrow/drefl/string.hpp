@@ -38,8 +38,7 @@ public:
 private:
     enum string_kind kind_;
 
-    string(enum string_kind skind, const std::string& name)
-        : type(value_kind::String, name), kind_(skind) {}
+    string(enum string_kind skind, const std::string& name);
 
     template <typename T>
     static auto get_kind() {

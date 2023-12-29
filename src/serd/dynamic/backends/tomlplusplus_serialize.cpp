@@ -198,7 +198,7 @@ void serialize_optional(const any& value, std::string_view name,
                         toml::node& node) {
     auto optional_type = value.type_info()->as_optional();
 
-    if (optional_type->has_value(value)) {
+    if (!optional_type->has_value(value)) {
         return;
     }
     if (node.is_table()) {

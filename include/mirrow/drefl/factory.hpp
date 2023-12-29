@@ -72,7 +72,7 @@ private:
 class property : public type {
 public:
     property(const std::string& name, const clazz* owner, qualifier q)
-        : type(value_kind::Property, name), owner_(owner), qualifier_(q) {}
+        : type(value_kind::Property, name, nullptr), owner_(owner), qualifier_(q) {}
 
     virtual void visit(class_visitor*) = 0;
     virtual any call_const(const any&) const = 0;
@@ -658,6 +658,8 @@ public:
     template <typename>
     friend class enum_factory;
 
+    enum_factory() {}
+
     static enum_factory& instance() noexcept {
         static enum_factory inst;
 
@@ -665,6 +667,11 @@ public:
         if (!inited) {
             inited = true;
             type_dict::instance().add(&inst.enum_info_);
+            inst.enum_info_.default_construct_ = []() {
+                return any{any::access_type::Copy, new T{},
+                           &type_operation_traits<T>::get_operations(),
+                           &instance().enum_info_};
+            };
         }
 
         return inst;
@@ -958,6 +965,11 @@ auto& array_factory<T>::instance() noexcept {
     if (!inited) {
         inited = true;
         type_dict::instance().add(&inst.info_);
+        inst.info_.default_construct_ = [](){
+            return any{any::access_type::Copy, new T{},
+                    &type_operation_traits<T>::get_operations(),
+                    &inst.info_};
+        };
     }
     return inst;
 }
@@ -971,6 +983,11 @@ auto& optional_factory<T>::instance() noexcept {
     if (!inited) {
         inited = true;
         type_dict::instance().add(&inst.info_);
+        inst.info_.default_construct_ = [](){
+            return any{any::access_type::Copy, new T{},
+                    &type_operation_traits<T>::get_operations(),
+                    &inst.info_};
+        };
     }
 
     return inst;

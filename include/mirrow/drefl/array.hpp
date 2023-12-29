@@ -13,6 +13,9 @@ struct type_operations;
 
 class array : public type {
 public:
+    template <typename>
+    friend class array_factory;
+
     enum class array_type {
         Static,
         Dynamic,
@@ -31,7 +34,8 @@ public:
             get_addr_type<T>(),
             elem_type,
             &array_operation_traits<T>::get_operations(),
-            &type_operation_traits<util::array_element_t<T>>::get_operations()};
+            &type_operation_traits<util::array_element_t<T>>::get_operations(),
+            nullptr};
     }
 
     enum array_type array_type() const noexcept { return array_type_; }
@@ -65,8 +69,9 @@ private:
     array(const std::string& name, enum array_type arr_type,
           enum addressing_type addr_type, const type* elem_type,
           const array_operations* operations,
-          const type_operations* elem_operations)
-        : type{value_kind::Array, name},
+          const type_operations* elem_operations,
+          default_construct_fn fn)
+        : type{value_kind::Array, name, fn},
           array_type_(arr_type),
           addressing_type_(addr_type),
           elem_type_(elem_type),

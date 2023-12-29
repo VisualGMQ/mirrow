@@ -24,12 +24,4 @@ void clazz::steal_value(any& from, any& to) {
     to.operations_->steal_assignment(to.payload(), from.payload());
 }
 
-any clazz::default_construct() const {
-    if (default_construct_) {
-        return default_construct_();
-    } else {
-        return {};
-    }
-}
-
 }  // namespace mirrow::drefl

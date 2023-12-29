@@ -339,8 +339,11 @@ void deserialize(any& obj, const toml::node& node) {
 
 void deserialize_optional(any& obj, const toml::node& node) {
     auto optional_type = obj.type_info()->as_optional();
-    mirrow::drefl::any value;
-    switch (optional_type->elem_type()->kind()) {
+
+    auto innerType = optional_type->elem_type();
+    auto value = innerType->default_construct();
+
+    switch (innerType->kind()) {
         case drefl::value_kind::None:
             break;
         case drefl::value_kind::Boolean:
@@ -381,7 +384,7 @@ void deserialize_optional(any& obj, const toml::node& node) {
     }
 
     if (value.has_value()) {
-        optional_type->set_value(value, obj);
+        optional_type->set_inner_value(value, obj);
     }
 }
 

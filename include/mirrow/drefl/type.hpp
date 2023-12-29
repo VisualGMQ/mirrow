@@ -4,6 +4,7 @@
 #include "mirrow/drefl/any.hpp"
 #include "mirrow/drefl/config.hpp"
 #include <algorithm>
+#include <functional>
 
 namespace mirrow::drefl {
 
@@ -17,9 +18,11 @@ class array;
 class optional;
 
 struct type {
-    explicit type(value_kind kind, const std::string& name)
-        : kind_(kind), name_(name) {}
-    explicit type(value_kind kind): kind_(kind) {}
+    using default_construct_fn = std::function<any(void)>;
+
+    type(value_kind kind, const std::string& name, default_construct_fn fn)
+        : kind_(kind), name_(name), default_construct_(fn) {}
+    type(value_kind kind, default_construct_fn fn): kind_(kind), default_construct_(fn) {}
     virtual ~type() = default;
 
     auto& attributes() const { return attrs_; }
@@ -54,8 +57,14 @@ struct type {
 
     auto& name() const noexcept { return name_; }
 
+    bool is_default_constructible() const {
+        return default_construct_ != nullptr;
+    }
+    any default_construct() const { return is_default_constructible() ? default_construct_() : any{}; }
+
 protected:
     std::string name_;
+    default_construct_fn default_construct_;
 
 private:
     value_kind kind_;

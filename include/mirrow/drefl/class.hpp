@@ -44,24 +44,17 @@ public:
     using default_construct_fn = any(void);
 
     explicit clazz(const std::string& name, default_construct_fn dc)
-        : type(value_kind::Class, name), default_construct_(dc) {}
+        : type(value_kind::Class, name, dc) {}
 
-    clazz() : type(value_kind::Class) {}
+    clazz() : type(value_kind::Class, nullptr) {}
 
     auto& properties() const noexcept { return properties_; }
 
     void set_value(any& from, any& to);
     void steal_value(any& from, any& to);
 
-    bool is_default_constructbile() const noexcept {
-        return default_construct_ != nullptr;
-    }
-
-    any default_construct() const;
-
 private:
     std::vector<std::shared_ptr<property>> properties_;
-    default_construct_fn* default_construct_ = nullptr;
 };
 
 }  // namespace mirrow::drefl

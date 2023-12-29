@@ -34,11 +34,11 @@ public:
     int layers() const noexcept { return layers_; }
 
 private:
-    pointer(): type(value_kind::Pointer, "") {}
+    pointer(): type(value_kind::Pointer, "", nullptr) {}
 
     pointer(const std::string& name, bool is_const, bool is_point_type_const,
             const type* typeinfo, int layers)
-        : type(value_kind::Pointer, name),
+        : type(value_kind::Pointer, name, nullptr),
           is_const_(is_const),
           is_point_type_const_(is_point_type_const),
           typeinfo_(typeinfo),
