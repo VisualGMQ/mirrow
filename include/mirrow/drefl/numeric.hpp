@@ -17,7 +17,7 @@ public:
         Char,
         Int,
         Short,
-        Long,
+        LongLong,
         Uint8,
         Uint16,
         Uint32,
@@ -61,8 +61,8 @@ private:
         if constexpr (std::is_same_v<short, T>) {
             return numeric_kind::Short;
         }
-        if constexpr (std::is_same_v<long, T>) {
-            return numeric_kind::Long;
+        if constexpr (std::is_same_v<long long, T>) {
+            return numeric_kind::LongLong;
         }
         if constexpr (std::is_same_v<uint8_t, T>) {
             return numeric_kind::Uint8;
@@ -97,8 +97,8 @@ private:
         if constexpr (std::is_same_v<short, T>) {
             return "short";
         }
-        if constexpr (std::is_same_v<long, T>) {
-            return "long";
+        if constexpr (std::is_same_v<long long, T>) {
+            return "long long";
         }
         if constexpr (std::is_same_v<uint8_t, T>) {
             return "uint8";

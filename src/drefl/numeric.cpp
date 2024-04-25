@@ -18,8 +18,8 @@ any default_create(enum numeric::numeric_kind kind) {
             return any_make_copy<int>(0);
         case numeric::Short:
             return any_make_copy<short>(0);
-        case numeric::Long:
-            return any_make_copy<long>(0);
+        case numeric::LongLong:
+            return any_make_copy<long long>(0);
         case numeric::Uint8:
             return any_make_copy<uint8_t>(0);
         case numeric::Uint16:
@@ -57,8 +57,8 @@ void do_set_value(any& a, T value) {
         case numeric::Short:
             *try_cast<short>(a) = value;
             break;
-        case numeric::Long:
-            *try_cast<long>(a) = value;
+        case numeric::LongLong:
+            *try_cast<long long>(a) = value;
             break;
         case numeric::Uint8:
             *try_cast<uint8_t>(a) = value;
@@ -121,8 +121,8 @@ double numeric::get_value(const any& a) const {
             return *try_cast_const<int>(a);
         case Short:
             return *try_cast_const<short>(a);
-        case Long:
-            return *try_cast_const<long>(a);
+        case LongLong:
+            return *try_cast_const<long long>(a);
         case Uint8:
             return *try_cast_const<uint8_t>(a);
         case Uint16:

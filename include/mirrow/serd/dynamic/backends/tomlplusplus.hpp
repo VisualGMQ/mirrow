@@ -66,6 +66,7 @@ private:
 };
 
 void serialize(toml::table& tbl, const any& value, std::string_view name);
+toml::table serialize_class(const any& value);
 void deserialize(any& obj, const toml::node& node);
 
 }  // namespace mirrow::serd::drefl
