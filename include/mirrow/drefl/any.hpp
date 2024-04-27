@@ -88,7 +88,7 @@ public:
         }
     }
 
-    any steal() {
+    [[nodiscard]] any steal() {
         auto access = access_;
         auto payload = operations_->steal_construct(payload_);
         auto operations = operations_;
