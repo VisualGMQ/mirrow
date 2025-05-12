@@ -31,7 +31,6 @@ long serialize_enum(const any& value) {
 void serialize_optional(const any& value, std::string_view name,
                         toml::node& node);
 
-toml::table serialize_class(const any& value);
 toml::array serialize_array(const any& value);
 
 class serialize_class_visitor : public class_visitor {
@@ -107,32 +106,32 @@ toml::array serialize_array(const any& value) {
         auto elem = value.type_info()->as_array()->get_const(i, value);
         auto type = elem.type_info();
         switch (type->kind()) {
-            case drefl::value_kind::None:
+            case value_kind::None:
                 MIRROW_LOG("unknown type, can't serialize");
                 break;
             case value_kind::Array:
                 arr.push_back(serialize_array(elem));
                 break;
-            case drefl::value_kind::Boolean:
+            case value_kind::Boolean:
                 arr.push_back(serialize_boolean(elem));
                 break;
-            case drefl::value_kind::Numeric:
+            case value_kind::Numeric:
                 arr.push_back(serialize_numeric(elem));
                 break;
-            case drefl::value_kind::String:
+            case value_kind::String:
                 arr.push_back(serialize_string(elem));
                 break;
-            case drefl::value_kind::Enum:
+            case value_kind::Enum:
                 arr.push_back(serialize_enum(elem));
                 break;
-            case drefl::value_kind::Class:
+            case value_kind::Class:
                 arr.push_back(serialize_class(elem));
                 break;
-            case drefl::value_kind::Optional:
+            case value_kind::Optional:
                 serialize_optional(elem, "", arr);
                 break;
-            case drefl::value_kind::Property:
-            case drefl::value_kind::Pointer:
+            case value_kind::Property:
+            case value_kind::Pointer:
                 MIRROW_LOG("can't serialize raw property/pointer");
                 break;
         }
@@ -150,34 +149,34 @@ void do_serialize(const any& value, toml::table& tbl, std::string_view name) {
     }
 
     switch (value.type_info()->kind()) {
-        case drefl::value_kind::None:
+        case value_kind::None:
             MIRROW_LOG("unknown type, can't serialize");
             break;
-        case drefl::value_kind::Boolean:
+        case value_kind::Boolean:
             tbl.emplace(name, serialize_boolean(value));
             break;
-        case drefl::value_kind::Numeric:
+        case value_kind::Numeric:
             tbl.emplace(name, serialize_numeric(value));
             break;
-        case drefl::value_kind::String:
+        case value_kind::String:
             tbl.emplace(name, serialize_string(value));
             break;
-        case drefl::value_kind::Enum:
+        case value_kind::Enum:
             tbl.emplace(name, serialize_enum(value));
             break;
-        case drefl::value_kind::Class:
+        case value_kind::Class:
             tbl.emplace(name, serialize_class(value));
             break;
-        case drefl::value_kind::Array:
+        case value_kind::Array:
             tbl.emplace(name, serialize_array(value));
             break;
-        case drefl::value_kind::Optional:
+        case value_kind::Optional:
             serialize_optional(value, name, tbl);
             break;
-        case drefl::value_kind::Property:
+        case value_kind::Property:
             MIRROW_LOG("can't serialize property directly");
             break;
-        case drefl::value_kind::Pointer:
+        case value_kind::Pointer:
             MIRROW_LOG("can't serialize pointer");
             break;
     }
@@ -208,30 +207,30 @@ void serialize_optional(const any& value, std::string_view name,
         auto elem = optional_type->get_value_const(value);
         auto arr = *node.as_array();
         switch (elem.type_info()->kind()) {
-            case drefl::value_kind::None:
+            case value_kind::None:
                 MIRROW_LOG("can't serialize unknown value");
                 break;
-            case drefl::value_kind::Boolean:
+            case value_kind::Boolean:
                 arr.push_back(serialize_boolean(elem));
                 break;
-            case drefl::value_kind::Numeric:
+            case value_kind::Numeric:
                 arr.push_back(serialize_numeric(elem));
                 break;
-            case drefl::value_kind::String:
+            case value_kind::String:
                 arr.push_back(serialize_string(elem));
                 break;
-            case drefl::value_kind::Enum:
+            case value_kind::Enum:
                 arr.push_back(serialize_enum(elem));
                 break;
-            case drefl::value_kind::Class:
+            case value_kind::Class:
                 arr.push_back(serialize_class(elem));
                 break;
-            case drefl::value_kind::Array:
+            case value_kind::Array:
                 arr.push_back(serialize_array(elem));
                 break;
-            case drefl::value_kind::Property:
-            case drefl::value_kind::Pointer:
-            case drefl::value_kind::Optional:
+            case value_kind::Property:
+            case value_kind::Pointer:
+            case value_kind::Optional:
                 MIRROW_LOG(
                     "can't serialize property/pointer/optional<optional<>>");
                 break;

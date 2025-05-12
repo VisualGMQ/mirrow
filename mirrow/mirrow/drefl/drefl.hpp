@@ -1,3 +1,5 @@
+#pragma once
+
 #include "mirrow/assert.hpp"
 #include "mirrow/drefl/config.hpp"
 #include "mirrow/drefl/any.hpp"
