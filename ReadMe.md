@@ -14,15 +14,15 @@ Nowadays, `mirrow` has these parts:
 ### util
 
 `util`(utility) has some convenient utility to do TMP:
-
-* `type_list`: compile-time type list. [:microscope: unittest](./test/utility/type_list.cpp)
-* `function_traits`: compile-time function info trait. [:microscope: unittest](./test/utility/function_traits.cpp)
-* `variable_traits`: compile-time variable info trait. [:microscope: unittest](./test/utility/variable_traits.cpp)
-* `const_str`: compile-time string. [:microscope: unittest](./test/utility/const_str.cpp)
+mirrow/tree/main/
+* `type_list`: compile-time type list. [:microscope: unittest](./tests/util/type_list.cpp)
+* `function_traits`: compile-time function info trait. [:microscope: unittest](./tests/util/function_traits.cpp)
+* `variable_traits`: compile-time variable info trait. [:microscope: unittest](./tests/util/variable_traits.cpp)
+* `const_str`: compile-time string. [:microscope: unittest](./tests/util/const_str.cpp)
 
 ### srefl
 
-static reflection framework. :microscope: [do reflect unittest](./test/srefl/srefl.cpp), [get reflected info unittest](./test/srefl/reflect.cpp)
+static reflection framework. :microscope: [do reflect unittest](./tests/srefl/srefl.cpp), [get reflected info unittest](./tests/srefl/reflect.cpp)
 
 To reflect your class, you must do like this:
 
@@ -57,7 +57,7 @@ srefl_class(Foo,
 #include "mirrow/srefl/srefl_end.hpp"
 ```
 
-[srefl_begin.hpp](./include/mirrow/srefl/srefl_begin.hpp) provide a bunch of macros to help you regist your class. And [srefl_end.hpp](./include/mirrow/srefl/srefl_end.hpp) will `#undef` these macros to avoid pollute your codes.
+[srefl_begin.hpp](./mirrow/mirrow/srefl/srefl_begin.hpp) provide a bunch of macros to help you regist your class. And [srefl_end.hpp](./mirrow/mirrow/srefl/srefl_end.hpp) will `#undef` these macros to avoid pollute your codes.
 
 Then, use `srefl_class(<your class>, ...)` to start regist your class. use `ctors()` to regist constructors(optional), use `fields(...)` to start regist member/static variable/functions.
 
@@ -77,7 +77,7 @@ dynamic reflection framework.
 
 #### any
 
-`any` is similar to `std::any`, but support ownership  :microscope:[unittest](./test/drefl/any.cpp)
+`any` is similar to `std::any`, but support ownership  :microscope:[unittest](./tests/drefl/any.cpp)
 
 `any` has 3 ownership(defined in `any::access_type`):
 
@@ -103,7 +103,7 @@ use `try_cast()` & `try_cast_const()` to cast any to a determined type. use `try
 
 #### factory
 
-`factory` is where you reflect your type:microscope:[unittest](./test/drefl/factory.cpp)
+`factory` is where you reflect your type:microscope:[unittest](./tests/drefl/factory.cpp)
 
 register your class by:
 
@@ -178,8 +178,8 @@ A serialize/deserialize tools based on dynamic/static reflection.
 
 `serd` provide two serialize/deserialize method: dynamic and static, which need you use dynamic/static reflection to provide type info first.
 
-dynamic reflection based serialize [:microscope:  unittest](./test/serd/drefl_serd.cpp)
-static reflection based serialize [:microscope:  unittest](./test/serd/srefl_serd.cpp)
+dynamic reflection based serialize [:microscope:  unittest](./tests/serd/drefl_serd.cpp)
+static reflection based serialize [:microscope:  unittest](./tests/serd/srefl_serd.cpp)
 
 After reflected type, you can do serialize like:
 

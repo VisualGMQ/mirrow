@@ -4,6 +4,7 @@
  * @note use `srefl_end.hpp` when you finish reflect
  */
 
+#include "mirrow/srefl/reflect.hpp"
 #include <array>
 
 #define srefl_class(type, ...)                      \
