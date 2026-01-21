@@ -11,7 +11,7 @@
     template <>                                     \
     struct type_info<type> : base_type_info<type> { \
         static constexpr std::string_view name() {  \
-            return #type;                           \
+            return strip_name(#type);               \
         }                                           \
         __VA_ARGS__                                 \
     };
